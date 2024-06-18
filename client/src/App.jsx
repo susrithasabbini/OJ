@@ -10,6 +10,8 @@ import {
 import HomePage from "./pages/HomePage";
 import NavbarComponent from "./components/NavbarComponent";
 import AuthPage from "./pages/AuthPage";
+import { Toaster } from "sonner";
+import VerifyPage from "./pages/VerifyPage";
 
 const Root = () => {
   const location = useLocation();
@@ -37,6 +39,7 @@ const Router = createBrowserRouter(
         <Route index element={<HomePage />} />
         <Route path="login" element={<AuthPage as={"login"} />} />
         <Route path="signup" element={<AuthPage as={"signup"} />} />
+        <Route path="user/verify-email" exact element={<VerifyPage />} />
       </Route>
     </Route>
   )
@@ -45,6 +48,7 @@ const Router = createBrowserRouter(
 export default function App() {
   return (
     <div className="w-screen h-screen">
+      <Toaster />
       <RouterProvider router={Router} />
     </div>
   );

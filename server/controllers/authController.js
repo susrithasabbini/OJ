@@ -8,14 +8,27 @@ const sendVerificationEmail = require("../utils/sendVerificationEmail");
 const sendResetPasswordEmail = require("../utils/sendResetPasswordEmail");
 const { attachCookiesToResponse } = require("../utils/jwt");
 const createHash = require("../utils/createHash");
+const createTokenUser = require("../utils/createTokenUser");
+const validator = require("validator");
 
 const register = async (req, res) => {
   const { email, username, password } = req.body;
   const emailExists = await User.findOne({ email });
-  if (emailExists)
+  if (emailExists) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "Email already exists!" });
     throw new CustomError.BadRequestError("Email already exists!");
+  }
 
   const verificationToken = crypto.randomBytes(40).toString("hex");
+
+  if (!validator.isStrongPassword(password)) {
+    res.status(StatusCodes.BAD_REQUEST).json({
+      message: "Please provide strong password!",
+    });
+  }
+
   const user = await User.create({
     username,
     email,
@@ -32,7 +45,7 @@ const register = async (req, res) => {
   });
 
   res.status(StatusCodes.OK).json({
-    msg: "Success! Please check your email to verify account",
+    message: "Success! Please check your email to verify account",
   });
 };
 
@@ -46,24 +59,38 @@ const verifyEmail = async (req, res) => {
   user.verified = Date.now();
   user.verificationToken = "";
   await user.save();
-  res.status(StatusCodes.OK).json({ msg: "Email verified!" });
+  res.status(StatusCodes.OK).json({ message: "Email verified!" });
 };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password)
+  if (!email || !password) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "Please provide email and password!" });
     throw new CustomError.BadRequestError("Please provide email and password!");
+  }
 
   const user = await User.findOne({ email });
-  if (!user)
+  if (!user) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "Email does not exist!" });
     throw new CustomError.UnauthenticatedError("Email does not exist!");
+  }
 
   const isPasswordCorrect = await user.comparePassword(password);
-  if (!isPasswordCorrect)
+  if (!isPasswordCorrect) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid password!" });
     throw new CustomError.UnauthenticatedError("Invalid password!");
+  }
 
-  if (!user.isVerified)
+  if (!user.isVerified) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "Please verify your email!" });
     throw new CustomError.UnauthenticatedError("Please verify your email!");
+  }
 
   const tokenUser = createTokenUser(user);
   let refreshToken = "";
@@ -71,8 +98,12 @@ const login = async (req, res) => {
   const existingToken = await Token.findOne({ user: user._id });
   if (existingToken) {
     const { isValid } = existingToken;
-    if (!isValid)
+    if (!isValid) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "Invalid Credentials!" });
       throw new CustomError.UnauthenticatedError("Invalid Credentials!");
+    }
 
     refreshToken = existingToken.refreshToken;
     attachCookiesToResponse({ res, user: tokenUser, refreshToken });
@@ -99,7 +130,7 @@ const logout = async (req, res) => {
     httpOnly: true,
     expires: new Date(Date.now()),
   });
-  res.status(StatusCodes.OK).json({ msg: "Logged out!!" });
+  res.status(StatusCodes.OK).json({ message: "Logged out!!" });
 };
 
 const forgotPassword = async (req, res) => {
@@ -125,7 +156,7 @@ const forgotPassword = async (req, res) => {
   }
   res
     .status(StatusCodes.OK)
-    .json({ msg: "Please check your email for reset password link" });
+    .json({ message: "Please check your email for reset password link" });
 };
 
 const resetPassword = async (req, res) => {
@@ -146,7 +177,9 @@ const resetPassword = async (req, res) => {
       user.passwordToken = null;
       user.passwordTokenExpirationDate = null;
       await user.save();
-      res.status(StatusCodes.OK).json({ msg: "Password reset successfully!" });
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Password reset successfully!" });
       return;
     }
   }
