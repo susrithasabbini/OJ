@@ -3,6 +3,8 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { url } from "../config";
+import { useGlobalContext } from "../context";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -11,18 +13,16 @@ function useQuery() {
 const VerifyPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const { isLoading } = useGlobalContext();
   const query = useQuery();
 
   const verifyToken = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_SERVER_API}/api/v1/auth/verify-email`,
-        {
-          verificationToken: query.get("token"),
-          email: query.get("email"),
-        }
-      );
+      const { data } = await axios.post(`${url}/api/v1/auth/verify-email`, {
+        verificationToken: query.get("token"),
+        email: query.get("email"),
+      });
       toast(data.msg);
     } catch (error) {
       console.log(error);
@@ -33,8 +33,10 @@ const VerifyPage = () => {
   };
 
   useEffect(() => {
-    verifyToken();
-  }, []);
+    if (!isLoading) {
+      verifyToken();
+    }
+  }, [isLoading]);
 
   if (loading)
     return (

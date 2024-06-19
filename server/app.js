@@ -3,24 +3,47 @@ const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const cors = require("cors");
-const connectDB = require("./db/connectDB");
+const rateLimiter = require("express-rate-limit");
+const xss = require("xss-clean");
+const mongoSanitize = require("express-mongo-sanitize");
 
+const connectDB = require("./db/connectDB");
 const authRouter = require("./routes/authRouter");
-const { PORT, MONGO_URI } = require("./config");
+const userRouter = require("./routes/userRouter");
+
+const { PORT, MONGO_URI, ORIGIN } = require("./config");
+
+const notFound = require("./middlewares/not-found");
+const errorHandlerMiddleware = require("./middlewares/error-handler");
 
 const app = express();
 
+app.set("trust proxy", 1);
+app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 60,
+  })
+);
+app.use(helmet());
+
 const corsOptions = {
-  origin: ["http://localhost:5173"],
+  origin: [ORIGIN],
   credentials: true,
 };
 app.use(cors(corsOptions));
-app.use(helmet());
+
+app.use(xss());
+app.use(mongoSanitize());
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser(process.env.JWT_SECRET));
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/users", userRouter);
+
+app.use(notFound);
+app.use(errorHandlerMiddleware);
 
 const port = PORT || 5000;
 

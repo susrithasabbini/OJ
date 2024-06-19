@@ -14,9 +14,12 @@
     "axios": "^1.7.2",
     "framer-motion": "^11.2.10",
     "lucide-react": "^0.395.0",
+    "month-days-by-year": "^1.0.1",
     "react": "^18.2.0",
+    "react-circular-progressbar": "^2.1.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.23.1"
+    "react-router-dom": "^6.23.1",
+    "sonner": "^1.5.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

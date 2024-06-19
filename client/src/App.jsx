@@ -12,21 +12,23 @@ import NavbarComponent from "./components/NavbarComponent";
 import AuthPage from "./pages/AuthPage";
 import { Toaster } from "sonner";
 import VerifyPage from "./pages/VerifyPage";
+import { useGlobalContext } from "./context";
+import AccountPage from "./pages/AccountPage";
+import ProtectedRoute from "./utils/ProtectedRoute";
 
 const Root = () => {
   const location = useLocation();
+  const { user } = useGlobalContext();
 
-  if (location.pathname === "/login" || location.pathname === "/signup") {
-    return (
-      <Fragment>
-        <NavbarComponent authLinks={false} />
-        <Outlet />
-      </Fragment>
-    );
-  }
   return (
     <Fragment>
-      <NavbarComponent authLinks={true} />
+      <NavbarComponent
+        authLinks={
+          !user &&
+          (location.pathname === "/login" || location.pathname === "/signup")
+        }
+        user={user}
+      />
       <Outlet />
     </Fragment>
   );
@@ -40,14 +42,29 @@ const Router = createBrowserRouter(
         <Route path="login" element={<AuthPage as={"login"} />} />
         <Route path="signup" element={<AuthPage as={"signup"} />} />
         <Route path="user/verify-email" exact element={<VerifyPage />} />
+        <Route
+          path="account"
+          exact
+          element={
+            <ProtectedRoute>
+              <AccountPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
     </Route>
   )
 );
 
 export default function App() {
+  const { isLoading } = useGlobalContext();
+  if (isLoading) {
+    return (
+      <h1 className="text-2xl text-center text-violet-600 my-40">Loading...</h1>
+    );
+  }
   return (
-    <div className="w-screen h-screen">
+    <div className="w-screen h-screen overflow-x-hidden">
       <Toaster />
       <RouterProvider router={Router} />
     </div>

@@ -2,11 +2,15 @@ import { Button, Input } from "@nextui-org/react";
 import { useState } from "react";
 import { EyeSlashFilledIcon } from "../icons/EyeSlashFilledIcon";
 import { EyeFilledIcon } from "../icons/EyeFilledIcon";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
+import { url } from "../config";
+import { useGlobalContext } from "../context";
 
 const AuthPage = ({ as }) => {
+  const { saveUser } = useGlobalContext();
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
   const [values, setValues] = useState({
@@ -27,25 +31,26 @@ const AuthPage = ({ as }) => {
     if (as === "signup") {
       try {
         const { data } = await axios.post(
-          `${import.meta.env.VITE_SERVER_API}/api/v1/auth/register`,
+          `${url}/api/v1/auth/register`,
           registerUser
         );
-        toast(data.message);
+        toast.success(data.message);
       } catch (error) {
         console.log(error);
-        toast(error.response.data.message);
+        toast.error(error.response.data.message);
       }
     } else if (as === "login") {
       try {
         const { data } = await axios.post(
-          `${import.meta.env.VITE_SERVER_API}/api/v1/auth/login`,
+          `${url}/api/v1/auth/login`,
           loginUser,
           { withCredentials: true }
         );
-        toast(`Hi ${data.user.username}`);
+        saveUser(data.user);
+        navigate("/");
       } catch (error) {
         console.log(error);
-        toast(error.response.data.message);
+        toast.error(error.response.data.message);
       }
     }
   };
@@ -93,11 +98,7 @@ const AuthPage = ({ as }) => {
             type={isVisible ? "text" : "password"}
             className="lg:w-80 md:w-52"
           />
-          <Button
-            type="submit"
-            variant="solid"
-            className="bg-violet-700 text-white"
-          >
+          <Button type="submit" variant="solid" color="primary">
             {as.charAt(0).toUpperCase() + as.slice(1)}
           </Button>
         </form>
@@ -105,14 +106,14 @@ const AuthPage = ({ as }) => {
         {as === "signup" ? (
           <p className="text-gray-500 text-xs text-center">
             Already have an account?{" "}
-            <span className="text-violet-600 font-bold cursor-pointer underline">
+            <span className="text-blue-600 font-bold cursor-pointer underline">
               <Link to={"/login"}>Login</Link>
             </span>
           </p>
         ) : (
           <p className="text-gray-500 text-xs text-center">
             Don&apos;t have an account?{" "}
-            <span className="text-violet-600 font-bold cursor-pointer underline">
+            <span className="text-blue-600 font-bold cursor-pointer underline">
               <Link to={"/signup"}>Signup</Link>
             </span>
           </p>

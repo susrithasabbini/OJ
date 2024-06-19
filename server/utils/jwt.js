@@ -20,16 +20,25 @@ const attachCookiesToResponse = ({ res, user, refreshToken }) => {
     secure: process.env.NODE_ENV === "production",
     signed: true,
     expires: new Date(Date.now() + oneDay),
-    sameSite: "None",
   });
   res.cookie("refreshToken", refreshTokenJWT, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     signed: true,
     expires: new Date(Date.now() + longerExp),
-    sameSite: "None",
   });
 };
+
+// const attachSingleCookiesToResponse = ({ res, user }) => {
+//   const token = createJWT({ payload: user });
+//   const oneDay = 1000 * 60 * 60 * 24;
+//   res.cookie("token", token, {
+//     httpOnly: true,
+//     expires: new Date(Date.now() + oneDay),
+//     secure: process.env.NODE_ENV === "production",
+//     signed: true,
+//   });
+// };
 
 module.exports = {
   createJWT,
