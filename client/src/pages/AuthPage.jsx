@@ -118,6 +118,13 @@ const AuthPage = ({ as }) => {
             </span>
           </p>
         )}
+
+        <Link
+          to={"/forgot-password"}
+          className="text-gray-600 font-bold cursor-pointer text-xs text-center flex justify-center mt-3"
+        >
+          Forgot Password?
+        </Link>
       </div>
     </div>
   );

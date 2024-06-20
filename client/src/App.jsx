@@ -15,6 +15,8 @@ import VerifyPage from "./pages/VerifyPage";
 import { useGlobalContext } from "./context";
 import AccountPage from "./pages/AccountPage";
 import ProtectedRoute from "./utils/ProtectedRoute";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 
 const Root = () => {
   const location = useLocation();
@@ -42,8 +44,14 @@ const Router = createBrowserRouter(
         <Route path="login" element={<AuthPage as={"login"} />} />
         <Route path="signup" element={<AuthPage as={"signup"} />} />
         <Route path="user/verify-email" exact element={<VerifyPage />} />
+        <Route path="forgot-password" exact element={<ForgotPasswordPage />} />
         <Route
-          path="account"
+          path="/user/reset-password"
+          exact
+          element={<ResetPasswordPage />}
+        />
+        <Route
+          path="account/:username"
           exact
           element={
             <ProtectedRoute>

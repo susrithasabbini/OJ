@@ -14,16 +14,16 @@ const getAllUsers = async (req, res) => {
 };
 
 const getSingleUser = async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id }).select("-password");
+  const user = await User.findOne({ username: req.params.username }).select("-password");
   if (!user) {
     res
       .status(StatusCodes.NOT_FOUND)
-      .json({ message: `No user found with id: ${req.params.id}` });
+      .json({ message: `No user found with username: ${req.params.username}` });
     throw new CustomError.NotFoundError(
-      `No user found with id: ${req.params.id}`
+      `No user found with username: ${req.params.username}`
     );
   }
-  checkPermissions(req.user, user._id);
+  // checkPermissions(req.user, user._id);
   res.status(StatusCodes.OK).json({ user });
 };
 

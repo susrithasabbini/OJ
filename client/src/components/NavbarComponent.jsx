@@ -107,7 +107,7 @@ export default function NavbarComponent({ authLinks, user }) {
                   </DropdownItem>
                   <DropdownItem
                     key="account"
-                    onClick={() => navigate("/account")}
+                    onClick={() => navigate(`/account/${user.username}`)}
                   >
                     Account
                   </DropdownItem>
@@ -130,6 +130,15 @@ export default function NavbarComponent({ authLinks, user }) {
       <NavbarMenu>
         {!authLinks && (
           <>
+            <NavbarItem>
+              <Link
+                href={`/account/${user?.username}`}
+                color="primary"
+                className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
+              >
+                Account
+              </Link>
+            </NavbarItem>
             <NavbarItem>
               <Link
                 href="#"

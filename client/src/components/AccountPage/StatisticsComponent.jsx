@@ -6,7 +6,7 @@ import SubmissionsComponent from "./SubmissionsComponent";
 const StatisticsComponent = () => {
   return (
     <div className="flex-[2]">
-      <div className="flex h-[40%] gap-x-5">
+      <div className="flex md:flex-row flex-col md:h-[40%] h-auto md:gap-x-5 gap-y-5">
         <SolvedProblemsComponent />
         <LeaderboardComponent />
       </div>

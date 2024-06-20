@@ -11,6 +11,7 @@ const {
 const crypto = require("crypto");
 const Token = require("../models/Token");
 const { ORIGIN } = require("../config");
+const validator = require("validator");
 
 const register = async (req, res) => {
   const { email, username, password } = req.body;
@@ -49,15 +50,11 @@ const verifyEmail = async (req, res) => {
   const { verificationToken, email } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
-    res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "Invalid email!" });
+    res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid email!" });
     throw new CustomError.BadRequestError("Invalid email!");
   }
   if (user.verificationToken !== verificationToken) {
-    res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "Invalid token!" });
+    res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid token!" });
     throw new CustomError.BadRequestError("Invalid token!");
   }
   user.isVerified = true;
@@ -84,9 +81,7 @@ const login = async (req, res) => {
   }
   const isPasswordCorrect = await user.comparePassword(password);
   if (!isPasswordCorrect) {
-    res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ message: "Invalid password!" });
+    res.status(StatusCodes.UNAUTHORIZED).json({ message: "Invalid password!" });
     throw new CustomError.UnauthenticatedError("Invalid password!");
   }
   if (!user.isVerified) {
@@ -104,8 +99,8 @@ const login = async (req, res) => {
     const { isValid } = existingToken;
     if (!isValid) {
       res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ message: "Invalid Credentials!" });
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ message: "Invalid Credentials!" });
       throw new CustomError.UnauthenticatedError("Invalid Credentials!");
     }
     refreshToken = existingToken.refreshToken;
@@ -163,7 +158,7 @@ const forgotPassword = async (req, res) => {
   }
   res
     .status(StatusCodes.OK)
-    .json({ msg: "Please check your email for reset password link" });
+    .json({ message: "Please check your email for reset password link" });
 };
 
 const resetPassword = async (req, res) => {
@@ -176,6 +171,12 @@ const resetPassword = async (req, res) => {
       "Please provide all required fields!"
     );
   }
+
+  if (!validator.isStrongPassword(password)) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "Please provide strong password!" });
+  }
   const user = await User.findOne({ email });
   if (user) {
     const currentDate = new Date();
@@ -187,7 +188,9 @@ const resetPassword = async (req, res) => {
       user.passwordToken = null;
       user.passwordTokenExpirationDate = null;
       await user.save();
-      res.status(StatusCodes.OK).json({ msg: "Password reset successfully!" });
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Success, redirecting to login page shortly..." });
       return;
     }
   }
