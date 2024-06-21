@@ -10,6 +10,7 @@ const {
   resetPassword,
 } = require("../controllers/authController");
 
+// express router
 router.post("/register", register);
 router.post("/login", login);
 router.delete("/logout", authenticateUser, logout);

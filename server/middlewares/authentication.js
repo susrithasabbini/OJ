@@ -21,7 +21,7 @@ const authenticateUser = async (req, res, next) => {
 
     if (!existingToken || !existingToken?.isValid) {
       res.status(StatusCodes.UNAUTHORIZED).json({ message: "Please login!" });
-      throw new CustomError.UnauthenticatedError("Authentication Invalid");
+      // throw new CustomError.UnauthenticatedError("Authentication Invalid");
     }
 
     attachCookiesToResponse({
@@ -34,7 +34,7 @@ const authenticateUser = async (req, res, next) => {
     next();
   } catch (error) {
     res.status(StatusCodes.UNAUTHORIZED).json({ message: "Please login!" });
-    throw new CustomError.UnauthenticatedError("Authentication Invalid");
+    // throw new CustomError.UnauthenticatedError("Authentication Invalid");
   }
 };
 
@@ -44,9 +44,9 @@ const authorizePermissions = (...roles) => {
       res
         .status(StatusCodes.UNAUTHORIZED)
         .json({ message: "Unauthorized to access to this route!" });
-      throw new CustomError.UnauthorizedError(
-        "Unauthorized to access to this route!"
-      );
+      // throw new CustomError.UnauthorizedError(
+      //   "Unauthorized to access to this route!"
+      // );
     }
     next();
   };

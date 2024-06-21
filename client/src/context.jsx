@@ -1,5 +1,11 @@
 import axios from "axios";
-import { useContext, useState, useEffect, createContext } from "react";
+import {
+  useContext,
+  useState,
+  useEffect,
+  createContext,
+  useCallback,
+} from "react";
 import { url } from "./config";
 const AppContext = createContext();
 
@@ -15,7 +21,7 @@ const AppProvider = ({ children }) => {
     setUser(null);
   };
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const { data } = await axios.get(`${url}/api/v1/users/showMe`, {
         withCredentials: true,
@@ -25,7 +31,7 @@ const AppProvider = ({ children }) => {
       removeUser();
     }
     setIsLoading(false);
-  };
+  }, []);
 
   const logoutUser = async () => {
     try {
@@ -40,7 +46,7 @@ const AppProvider = ({ children }) => {
 
   useEffect(() => {
     fetchUser();
-  }, []);
+  }, [fetchUser]);
 
   return (
     <AppContext.Provider

@@ -7,17 +7,19 @@ const rateLimiter = require("express-rate-limit");
 const xss = require("xss-clean");
 const mongoSanitize = require("express-mongo-sanitize");
 
+// imports
 const connectDB = require("./db/connectDB");
-const authRouter = require("./routes/authRouter");
-const userRouter = require("./routes/userRouter");
-
 const { PORT, MONGO_URI, ORIGIN } = require("./config");
-
 const notFound = require("./middlewares/not-found");
 const errorHandlerMiddleware = require("./middlewares/error-handler");
 
+//routes
+const authRouter = require("./routes/authRouter");
+const userRouter = require("./routes/userRouter");
+
 const app = express();
 
+// midleware
 app.set("trust proxy", 1);
 app.use(
   rateLimiter({
@@ -39,9 +41,11 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser(process.env.JWT_SECRET));
 
+// routes
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
 
+// error middleware
 app.use(notFound);
 app.use(errorHandlerMiddleware);
 

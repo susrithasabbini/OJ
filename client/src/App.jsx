@@ -14,9 +14,11 @@ import { Toaster } from "sonner";
 import VerifyPage from "./pages/VerifyPage";
 import { useGlobalContext } from "./context";
 import AccountPage from "./pages/AccountPage";
-import ProtectedRoute from "./utils/ProtectedRoute";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ProblemsPage from "./pages/ProblemsPage";
+import ProblemDetailPage from "./pages/ProblemsDetailPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 const Root = () => {
   const location = useLocation();
@@ -50,15 +52,11 @@ const Router = createBrowserRouter(
           exact
           element={<ResetPasswordPage />}
         />
-        <Route
-          path="account/:username"
-          exact
-          element={
-            <ProtectedRoute>
-              <AccountPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/problems" exact element={<ProblemsPage />} />
+        <Route path="/problems/:id" element={<ProblemDetailPage />} />
+        <Route path="account/:username" exact element={<AccountPage />} />
+
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Route>
   )

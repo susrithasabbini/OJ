@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Input, Chip } from "@nextui-org/react";
 import { toast } from "sonner";
 
-const SkillsComponent = () => {
+const SkillsComponent = ({ isOwner }) => {
   const [skills, setSkills] = useState([
     "JavaScript",
     "React",
@@ -39,32 +39,34 @@ const SkillsComponent = () => {
   return (
     <div className="w-full flex flex-col items-center gap-y-4">
       <h2 className="text-medium font-bold text-gray-800">Coding Skills</h2>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 justify-center">
         {skills.map((skill) => (
           <Chip
             key={skill}
             color="primary"
             variant="flat"
-            isPressable
-            onPress={() => handleRemoveSkill(skill)}
+            onClick={() => handleRemoveSkill(skill)}
+            className="cursor-pointer"
           >
             {skill}
           </Chip>
         ))}
       </div>
-      <div className="flex gap-2 mt-4 w-full">
-        <Input
-          clearable
-          underlined
-          fullWidth
-          placeholder="Add Skill"
-          value={newSkill}
-          onChange={(e) => setNewSkill(e.target.value)}
-        />
-        <Button auto onPress={handleAddSkill}>
-          Add
-        </Button>
-      </div>
+      {isOwner && (
+        <div className="flex gap-2 mt-4 w-full">
+          <Input
+            clearable
+            underlined
+            fullWidth
+            placeholder="Add Skill"
+            value={newSkill}
+            onChange={(e) => setNewSkill(e.target.value)}
+          />
+          <Button auto onClick={handleAddSkill}>
+            Add
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

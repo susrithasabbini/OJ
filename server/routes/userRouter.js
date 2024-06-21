@@ -12,6 +12,7 @@ const {
   getSingleUser,
 } = require("../controllers/userController");
 
+// express router
 router
   .route("/")
   .get(authenticateUser, authorizePermissions("admin", "owner"), getAllUsers);
@@ -20,6 +21,6 @@ router.route("/showMe").get(authenticateUser, showCurrentUser);
 router.route("/updateUser").patch(authenticateUser, updateUser);
 router.route("/updateUserPassword").patch(authenticateUser, updateUserPassword);
 
-router.route("/:username").get(authenticateUser, getSingleUser);
+router.route("/:username").get(getSingleUser);
 
 module.exports = router;

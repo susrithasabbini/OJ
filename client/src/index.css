@@ -4,7 +4,7 @@
 
 /* Add this to your global CSS file */
 .thin-scrollbar::-webkit-scrollbar {
-  width: 0px;
+  width: 3px;
   height: 3px;
 }
 

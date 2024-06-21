@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGlobalContext } from "../../context";
 import axios from "axios";
 import { url } from "../../config";
-import { Edit3, Mail, MailIcon, Save, User } from "lucide-react";
+import { Edit3, Mail, Save, User } from "lucide-react";
 import {
   Button,
   Divider,
@@ -17,17 +17,19 @@ import {
 } from "@nextui-org/react";
 import { toast } from "sonner";
 import SkillsComponent from "./SkillsComponent";
+import { EyeSlashFilledIcon } from "../../icons/EyeSlashFilledIcon";
+import { EyeFilledIcon } from "../../icons/EyeFilledIcon";
 
-const EditProfileComponent = () => {
+const EditProfileComponent = ({ isOwner, paramsUser }) => {
   const { user, saveUser } = useGlobalContext();
   const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState(user?.username || "");
+  const [username, setUsername] = useState(
+    user?.username || paramsUser?.username || ""
+  );
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
-
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
-    setUsername(user?.username || "");
+    setUsername(user?.username || paramsUser?.username || "");
   };
 
   const handleSave = async () => {
@@ -39,8 +41,10 @@ const EditProfileComponent = () => {
         { withCredentials: true }
       );
       saveUser(response.data.user);
+      toast.success("Profile updated successfully");
       setIsEditing(false);
     } catch (error) {
+      toast.error("Failed to update profile");
       console.error("Failed to update user:", error);
     }
     setIsLoading(false);
@@ -48,31 +52,41 @@ const EditProfileComponent = () => {
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
+  const [isOldVisible, setIsOldVisible] = useState(false);
+  const toggleOldVisibility = () => setIsOldVisible(!isOldVisible);
+  const [isNewVisible, setIsNewVisible] = useState(false);
+  const toggleNewVisibility = () => setIsNewVisible(!isNewVisible);
+  const [values, setValues] = useState({
+    oldPassword: "",
+    newPassword: "",
+  });
+
   const handleChange = (e) => {
-    setEmail(e.target.value);
+    setValues({ ...values, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
+    const { oldPassword, newPassword } = values;
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await axios.post(
-        `${url}/api/v1/auth/forgot-password`,
-        { email },
+      const response = await axios.patch(
+        `${url}/api/v1/users/updateUserPassword`,
+        { oldPassword, newPassword },
         { withCredentials: true }
       );
       toast.success(response.data.message, { position: "top-center" });
       setIsEditing(false);
     } catch (error) {
       toast.error(error.response.data.message);
-      console.error("Failed to update user:", error);
+      console.error("Failed to change password:", error);
     }
-    setEmail("");
+    setValues({ oldPassword: "", newPassword: "" });
     setIsLoading(false);
   };
 
   return (
-    <div className="bg-gray-100 px-5 rounded-xl flex flex-[1] justify-center h-fit py-10">
+    <div className="px-5 rounded-xl flex flex-1 justify-center h-fit py-10 shadow-md">
       <div className="w-full flex flex-col gap-y-3 items-center">
         <User size={50} color="#3b82f6" />
         {isEditing ? (
@@ -87,7 +101,7 @@ const EditProfileComponent = () => {
             />
             <div
               onClick={handleSave}
-              className="flex items-center gap-x-2 cursor-pointer hover:scale-110"
+              className="flex items-center gap-x-2 cursor-pointer hover:scale-110 mt-3"
             >
               {isLoading ? (
                 <Spinner />
@@ -99,23 +113,33 @@ const EditProfileComponent = () => {
             </div>
           </>
         ) : (
-          <div className="flex items-center gap-x-3">
-            <p className="font-bold text-2xl text-gray-800">{user?.username}</p>
-            <div
-              onClick={handleEditToggle}
-              className="cursor-pointer hover:scale-110"
-            >
-              <Edit3 size={20} />
-            </div>
+          <div className="flex items-center gap-x-3 mt-3">
+            <p className="font-bold text-2xl text-gray-800">
+              {user?.username || paramsUser?.username}
+            </p>
+            {isOwner && (
+              <div
+                onClick={handleEditToggle}
+                className="cursor-pointer hover:scale-110"
+              >
+                <Edit3 size={20} />
+              </div>
+            )}
           </div>
         )}
-        <p className="flex items-center gap-x-3">
+        <p className="flex items-center gap-x-3 text-sm mt-2">
           <Mail color="#3b82f6" />
-          <span>{user?.email}</span>
+          <span>{user?.email || paramsUser?.email}</span>
         </p>
-        <Button className="cursor-pointer" onClick={onOpen}>
-          Reset Password
-        </Button>
+        {isOwner && (
+          <Button
+            color="primary"
+            className="cursor-pointer mt-3"
+            onClick={onOpen}
+          >
+            Change Password
+          </Button>
+        )}
         <Modal
           isOpen={isOpen}
           onOpenChange={onOpenChange}
@@ -123,22 +147,55 @@ const EditProfileComponent = () => {
         >
           <ModalContent>
             {(onClose) => (
-              <form onSubmit={handleSubmit}>
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col items-center"
+              >
                 <ModalHeader className="flex flex-col gap-1">
                   Reset Password
                 </ModalHeader>
                 <ModalBody>
                   <Input
-                    autoFocus
-                    endContent={
-                      <MailIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                    }
-                    label="Email"
-                    placeholder="Enter email"
-                    variant="bordered"
-                    value={email}
+                    value={values.oldPassword}
+                    label="Old Password"
+                    name="oldPassword"
                     onChange={handleChange}
-                    name="email"
+                    endContent={
+                      <button
+                        className="focus:outline-none"
+                        type="button"
+                        onClick={toggleOldVisibility}
+                      >
+                        {isOldVisible ? (
+                          <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                        ) : (
+                          <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                        )}
+                      </button>
+                    }
+                    type={isOldVisible ? "text" : "password"}
+                    className="lg:w-80 md:w-52"
+                  />
+                  <Input
+                    value={values.newPassword}
+                    label="New Password"
+                    name="newPassword"
+                    onChange={handleChange}
+                    endContent={
+                      <button
+                        className="focus:outline-none"
+                        type="button"
+                        onClick={toggleNewVisibility}
+                      >
+                        {isNewVisible ? (
+                          <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                        ) : (
+                          <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                        )}
+                      </button>
+                    }
+                    type={isNewVisible ? "text" : "password"}
+                    className="lg:w-80 md:w-52"
                   />
                 </ModalBody>
                 <ModalFooter>
@@ -146,7 +203,7 @@ const EditProfileComponent = () => {
                     Close
                   </Button>
                   <Button color="primary" onPress={onClose} type="submit">
-                    Send Reset Link
+                    Change
                   </Button>
                 </ModalFooter>
               </form>
@@ -154,7 +211,7 @@ const EditProfileComponent = () => {
           </ModalContent>
         </Modal>
         <Divider className="my-4" />
-        <SkillsComponent />
+        <SkillsComponent isOwner={isOwner} />
       </div>
     </div>
   );

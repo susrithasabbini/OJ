@@ -43,11 +43,11 @@ export default function NavbarComponent({ authLinks, user }) {
         </NavbarBrand>
         <NavbarItem>
           <Link
-            href="#"
+            href="/problems"
             color="primary"
             className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
           >
-            Practice
+            Problems
           </Link>
         </NavbarItem>
         <NavbarItem>
@@ -74,12 +74,12 @@ export default function NavbarComponent({ authLinks, user }) {
         {(authLinks || !user) && (
           <>
             <NavbarItem className="hidden md:flex">
-              <Link href="login" color="foreground">
+              <Link href="/login" color="foreground">
                 Login
               </Link>
             </NavbarItem>
             <NavbarItem>
-              <Button as={Link} color="primary" href="signup" variant="flat">
+              <Button as={Link} color="primary" href="/signup" variant="flat">
                 Sign Up
               </Button>
             </NavbarItem>
@@ -141,11 +141,11 @@ export default function NavbarComponent({ authLinks, user }) {
             </NavbarItem>
             <NavbarItem>
               <Link
-                href="#"
+                href="/problems"
                 color="primary"
                 className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
               >
-                Practice
+                Problems
               </Link>
             </NavbarItem>
             <NavbarItem>
@@ -182,11 +182,11 @@ export default function NavbarComponent({ authLinks, user }) {
           <>
             <NavbarItem>
               <Link
-                href="#"
+                href="/problems"
                 color="primary"
                 className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
               >
-                Practice
+                Problems
               </Link>
             </NavbarItem>
             <NavbarItem>
