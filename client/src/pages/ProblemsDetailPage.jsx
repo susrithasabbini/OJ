@@ -1,9 +1,9 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
-import SplitPane, { Pane } from "split-pane-react";
-import { Editor } from "@monaco-editor/react";
+import SplitPane from "split-pane-react";
 import "split-pane-react/esm/themes/default.css";
-import { Button, Snippet, Tab, Tabs, Textarea } from "@nextui-org/react";
+import ProblemStatement from "../components/ProblemDetail/ProblemStatement";
+import CodingEditor from "../components/ProblemDetail/CodingEditor";
 
 const problems = [
   {
@@ -179,26 +179,12 @@ const problems = [
 const ProblemDetail = () => {
   const { id } = useParams();
   const problem = problems.find((p) => p.id === parseInt(id));
-  const [code, setCode] = useState("");
-  const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
+
   const [sizes, setSizes] = useState(["35%", "auto"]);
 
   if (!problem) {
     return <div>Problem not found</div>;
   }
-
-  const handleRunCode = () => {
-    // Placeholder logic for running code
-    setOutput("Running code...");
-    setInput("");
-  };
-
-  const handleSubmitCode = () => {
-    // Placeholder logic for submitting code
-    setOutput("Submitting code...");
-    setInput("");
-  };
 
   return (
     <div className="h-[100%] w-full flex flex-col">
@@ -206,88 +192,10 @@ const ProblemDetail = () => {
         split="vertical"
         sizes={sizes}
         onChange={(sizes) => setSizes(sizes)}
-        defaultSize={sizes}
         className="custom-split-pane"
       >
-        <Pane maxSize="50%">
-          <div className="p-6 border-r-3 shadow-lg h-full overflow-y-scroll thin-scrollbar">
-            <h1 className="text-2xl font-semibold mb-4 text-gray-700">
-              {problem.title}
-            </h1>
-            <p className="text-medium mb-4">{problem.description}</p>
-            <h2 className="text-xl font-semibold mb-2">Examples</h2>
-            {problem.examples.map((example, index) => (
-              <div key={index} className="mb-4">
-                <p>
-                  <strong className="text-gray-800">Input:</strong>{" "}
-                  {example.input}
-                </p>
-                <p>
-                  <strong>Output:</strong> {example.output}
-                </p>
-              </div>
-            ))}
-            <div className="flex flex-col gap-y-3 justify-center">
-              {problem.input.map((inp, i) => (
-                <div key={i}>
-                  <h2 className="text-gray-800 text-sm my-2">Input {i + 1}</h2>
-                  <Snippet symbol="">
-                    <span>{inp}</span>
-                  </Snippet>
-                </div>
-              ))}
-            </div>
-
-            <h2 className="text-xl font-semibold mt-2">Constraints</h2>
-            <p>{problem.constraints}</p>
-          </div>
-        </Pane>
-        <Pane>
-          <div className="p-6 bg-white rounded-lg shadow-md h-full flex flex-col overflow-y-scroll thin-scrollbar">
-            <Editor
-              height="65vh"
-              language="cpp"
-              theme="vs-dark"
-              value={code}
-              onChange={(value) => setCode(value)}
-            />
-            <div className="flex flex-row">
-              <div className="flex-[80%]">
-                <Tabs aria-label="Options" className="mt-3">
-                  <Tab key="input" title="Input">
-                    <Textarea
-                      className="w-full mb-2 flex-1"
-                      placeholder="Input"
-                      value={input}
-                    />
-                  </Tab>
-                  <Tab key="output" title="Output">
-                    <Textarea
-                      className="w-full mb-2 flex-1"
-                      placeholder="Output"
-                      value={output}
-                      readOnly
-                    />
-                  </Tab>
-                </Tabs>
-              </div>
-
-              <div className="flex-[20%] justify-end space-x-2 mt-3">
-                <Button variant="flat" color="primary" onClick={handleRunCode}>
-                  Run
-                </Button>
-                <Button
-                  variant="solid"
-                  color="success"
-                  className="text-white"
-                  onClick={handleSubmitCode}
-                >
-                  Submit
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Pane>
+        <ProblemStatement problem={problem} />
+        <CodingEditor />
       </SplitPane>
     </div>
   );
