@@ -11,26 +11,55 @@ const ProblemSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    desc: { type: String },
-    input: { type: String },
-    whoSolved: [{ type: String }],
-    output: { type: String },
-    constraints: { type: String },
-    timelimit: { type: Number, default: 5.0 },
-    statement: { type: String, required: true },
-    createdBy: { type: String, required: true },
-    testcase: [
+    description: {
+      type: String,
+    },
+    difficulty: {
+      type: String,
+      required: true,
+      enum: ["Easy", "Medium", "Hard"],
+    },
+    tags: {
+      type: [String],
+      required: true,
+    },
+    input: {
+      type: String,
+    },
+    output: {
+      type: String,
+    },
+    constraints: {
+      type: String,
+    },
+    timelimit: {
+      type: Number,
+      default: 5.0,
+    },
+    createdBy: {
+      type: String,
+      required: true,
+    },
+    testCases: [
       {
-        input: { type: String },
-        output: { type: String },
-        sample: { type: Boolean },
-        explanation: { type: String },
+        input: {
+          type: String,
+        },
+        output: {
+          type: String,
+        },
+        sample: {
+          type: Boolean,
+        },
+        explanation: {
+          type: String,
+        },
       },
     ],
   },
   { timestamps: true }
 );
 
-const Problem = mongoose.model("problem", ProblemSchema);
+const Problem = mongoose.model("Problem", ProblemSchema);
 
 module.exports = Problem;

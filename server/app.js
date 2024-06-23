@@ -17,6 +17,7 @@ const errorHandlerMiddleware = require("./middlewares/error-handler");
 const authRouter = require("./routes/authRouter");
 const userRouter = require("./routes/userRouter");
 const codeRouter = require("./routes/codeRouter");
+const problemsRouter = require("./routes/problemsRouter");
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/code", codeRouter);
+app.use("/api/v1/problems", problemsRouter);
 
 // error middleware
 app.use(notFound);

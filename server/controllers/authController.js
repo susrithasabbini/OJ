@@ -47,7 +47,7 @@ const register = async (req, res) => {
     origin: origin,
   });
   res.status(StatusCodes.OK).json({
-    msg: "Success! Please check your email to verify account",
+    message: "Success! Please check your email to verify account",
   });
 };
 
@@ -72,7 +72,7 @@ const verifyEmail = async (req, res) => {
   user.verified = Date.now();
   user.verificationToken = "";
   await user.save();
-  res.status(StatusCodes.OK).json({ msg: "Email verified!!" });
+  res.status(StatusCodes.OK).json({ message: "Email verified!!" });
 };
 
 const login = async (req, res) => {
@@ -151,7 +151,7 @@ const logout = async (req, res) => {
     httpOnly: true,
     expires: new Date(Date.now()),
   });
-  res.status(StatusCodes.OK).json({ msg: "Logged out!!" });
+  res.status(StatusCodes.OK).json({ message: "Logged out!!" });
 };
 
 const forgotPassword = async (req, res) => {
