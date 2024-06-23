@@ -1,26 +1,26 @@
-const Job = require("../models/Job");
+const { generateInputFile } = require("../generateInputFile");
 const { generateFile } = require("../generateFile");
-const { addJobToQueue, addSubmitToQueue } = require("../jobQueue");
+const { executeCpp } = require("../executeCpp");
+const { executeJava } = require("../executeJava");
+const { executePython } = require("../executePy");
 
 const runCode = async (req, res) => {
-  let { language = "cpp", code, userInput } = req.body;
-
-  if (code === undefined || !code) {
-    return res.status(400).json({ success: false, error: "Empty code body!" });
+  const { language = "cpp", code, input } = req.body;
+  if (code === undefined) {
+    return res.status(404).json({ success: false, error: "Empty code!" });
   }
-
-  let job;
   try {
-    // need to generate a c++ file with content from the request
-    const filepath = await generateFile(language, code);
-
-    job = await Job({ language, filepath, userInput }).save();
-    const jobId = job["_id"];
-    addJobToQueue(jobId);
-
-    res.status(201).json({ success: true, jobId });
-  } catch (err) {
-    return res.status(500).json(err);
+    const filePath = await generateFile(language, code);
+    const inputPath = await generateInputFile(input);
+    let output;
+    if (language === "cpp") output = await executeCpp(filePath, inputPath);
+    else if (language === "java")
+      output = await executeJava(filePath, inputPath);
+    else if (language === "python")
+      output = await executePython(filePath, inputPath);
+    res.json({ filePath, inputPath, output });
+  } catch (error) {
+    res.status(500).json({ error: error });
   }
 };
 

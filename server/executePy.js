@@ -1,12 +1,37 @@
-const { execSync } = require("child_process"); //Provides the ability to spawn new processes, execute shell commands, and communicate with them
+const { exec } = require("child_process");
+const fs = require("fs");
 const path = require("path");
 
-const executePy = (filepath, userInput) => {
-  const child = execSync(`python3 ${filepath}`, { input: userInput });
+const outputPath = path.join(__dirname, "outputs");
 
-  return child.toString();
+if (!fs.existsSync(outputPath)) {
+  fs.mkdirSync(outputPath, { recursive: true });
+}
+
+const executePython = (filepath, inputPath) => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(inputPath, "utf8", (err, inputData) => {
+      if (err) {
+        return reject({ error: err });
+      }
+
+      const command = `python ${filepath}`;
+
+      exec(command, { shell: "cmd.exe" }, (error, stdout, stderr) => {
+        if (error) {
+          reject({ error, stderr });
+          return;
+        }
+        if (stderr) {
+          reject(stderr);
+          return;
+        }
+        resolve(stdout);
+      }).stdin.end(inputData);
+    });
+  });
 };
 
 module.exports = {
-  executePy,
+  executePython,
 };

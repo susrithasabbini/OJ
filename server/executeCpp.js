@@ -1,4 +1,4 @@
-const { execSync } = require("child_process"); //'execSync' is used to run shell commands synchronously
+const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -8,17 +8,26 @@ if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
-const executeCpp = (filepath, userInput) => {
-  const jobId = path.basename(filepath).split(".")[0]; //provide the name of file which we want to execute (i.e. 6d13b37e-c678-4368-b36e-61d05b5d0bd3.cpp -> 6d13b37e-c678-4368-b36e-61d05b5d0bd3)
-  const outPath = path.join(outputPath, `${jobId}.out`);
+const executeCpp = (filepath, inputPath) => {
+  const jobId = path.basename(filepath).split(".")[0];
+  const outPath = path.join(outputPath, `${jobId}.exe`);
+  console.log({ jobId, filepath, inputPath, jobId, outputPath, outPath });
 
-  const child = execSync(
-    `g++ ${filepath} -o ${outPath} && cd ${outputPath} && .\\${jobId}.exe`,
-    { input: userInput }
-  );
-
-  // console.log(child.toString());
-  return child.toString();
+  return new Promise((resolve, reject) => {
+    exec(
+      `g++ "${filepath}" -o "${outPath}" && cd "${outputPath}" && "${jobId}.exe" < "${inputPath}"`,
+      { shell: "cmd.exe" },
+      (error, stdout, stderr) => {
+        if (error) {
+          reject({ error, stderr });
+        } else if (stderr) {
+          reject(stderr);
+        } else {
+          resolve(stdout);
+        }
+      }
+    );
+  });
 };
 
 module.exports = {
