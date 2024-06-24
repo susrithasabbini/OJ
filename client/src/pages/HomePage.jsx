@@ -37,7 +37,7 @@ const LandingPage = () => {
               Our platform offers challenges in different languages and
               difficulty levels to help you improve.
             </p>
-            <Link to="/practice-problems">
+            <Link to="/problems">
               <button className="bg-blue-400 text-white px-6 py-3 rounded-full hover:scale-105">
                 Start Practicing
               </button>

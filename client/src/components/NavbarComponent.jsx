@@ -41,33 +41,37 @@ export default function NavbarComponent({ authLinks, user }) {
             Code<span className="text-gray-700">Judge</span>
           </p>
         </NavbarBrand>
-        <NavbarItem>
-          <Link
-            href="/problems"
-            color="primary"
-            className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
-          >
-            Problems
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link
-            href="#"
-            color="primary"
-            className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
-          >
-            Compete
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link
-            color="primary"
-            href="#"
-            className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
-          >
-            Leaderboard
-          </Link>
-        </NavbarItem>
+        {(!user || user.role === "user") && (
+          <>
+            <NavbarItem>
+              <Link
+                href="/problems"
+                color="primary"
+                className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
+              >
+                Problems
+              </Link>
+            </NavbarItem>
+            <NavbarItem>
+              <Link
+                href="#"
+                color="primary"
+                className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
+              >
+                Compete
+              </Link>
+            </NavbarItem>
+            <NavbarItem>
+              <Link
+                color="primary"
+                href="#"
+                className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
+              >
+                Leaderboard
+              </Link>
+            </NavbarItem>
+          </>
+        )}
       </NavbarContent>
 
       <NavbarContent justify="end">
@@ -116,6 +120,7 @@ export default function NavbarComponent({ authLinks, user }) {
                     color="danger"
                     onClick={() => {
                       logoutUser();
+                      navigate("/");
                     }}
                   >
                     Log Out
@@ -128,17 +133,17 @@ export default function NavbarComponent({ authLinks, user }) {
       </NavbarContent>
 
       <NavbarMenu>
-        {!authLinks && (
+        <NavbarItem>
+          <Link
+            href={`/account/${user?.username}`}
+            color="primary"
+            className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
+          >
+            Account
+          </Link>
+        </NavbarItem>
+        {!authLinks && user && user.role === "user" && (
           <>
-            <NavbarItem>
-              <Link
-                href={`/account/${user?.username}`}
-                color="primary"
-                className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
-              >
-                Account
-              </Link>
-            </NavbarItem>
             <NavbarItem>
               <Link
                 href="/problems"
@@ -170,7 +175,10 @@ export default function NavbarComponent({ authLinks, user }) {
               <Link
                 color="danger"
                 href="#"
-                onClick={() => logoutUser()}
+                onClick={() => {
+                  logoutUser();
+                  navigate("/");
+                }}
                 className="font-semibold hover:underline hover:text-red-500 hover:scale-105 transition-transform duration-300 ease-in-out"
               >
                 Logout
@@ -178,7 +186,7 @@ export default function NavbarComponent({ authLinks, user }) {
             </NavbarItem>
           </>
         )}
-        {authLinks && (
+        {!authLinks && !user && (
           <>
             <NavbarItem>
               <Link

@@ -2,8 +2,14 @@ const { StatusCodes } = require("http-status-codes");
 const Problem = require("../models/Problem");
 
 const getAllProblems = async (req, res) => {
-  const problems = await Problem.find({});
-  res.status(StatusCodes.OK).json({ problems });
+  try {
+    const problems = await Problem.find({}, "slug title difficulty tags");
+    res.status(StatusCodes.OK).json({ problems });
+  } catch (error) {
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
 };
 
 const createProblem = async (req, res) => {
@@ -26,6 +32,16 @@ const createProblem = async (req, res) => {
     const problem = await newProblem.save();
 
     return res.status(StatusCodes.CREATED).json({ problem });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(error);
+  }
+};
+
+const getProblemBySlug = async (req, res) => {
+  try {
+    const problem = await Problem.find({ slug: req.params.slug });
+    return res.status(StatusCodes.OK).json({ problem });
   } catch (error) {
     console.log(error);
     return res.status(500).json(error);
@@ -75,8 +91,7 @@ const editProblem = async (req, res) => {
     }
 
     if (testCases) {
-      // Append new test cases to existing test cases
-      updateData.testCases = [...existingProblem.testCases, ...testCases];
+      updateData.testCases = [...testCases];
     }
 
     const saved = await Problem.findByIdAndUpdate(id, updateData, {
@@ -112,6 +127,7 @@ const deleteProblem = async (req, res) => {
 module.exports = {
   getAllProblems,
   createProblem,
+  getProblemBySlug,
   getProblemById,
   editProblem,
   deleteProblem,

@@ -11,7 +11,7 @@ if (!fs.existsSync(outputPath)) {
 const executeCpp = (filepath, inputPath) => {
   const jobId = path.basename(filepath).split(".")[0];
   const outPath = path.join(outputPath, `${jobId}.exe`);
-  console.log({ jobId, filepath, inputPath, jobId, outputPath, outPath });
+  // console.log({ jobId, filepath, inputPath, jobId, outputPath, outPath });
 
   return new Promise((resolve, reject) => {
     exec(

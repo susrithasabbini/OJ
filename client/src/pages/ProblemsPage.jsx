@@ -1,102 +1,19 @@
-import { useState } from "react";
-import { Input, Chip } from "@nextui-org/react";
+import { useEffect, useState } from "react";
+import {
+  Input,
+  Chip,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@nextui-org/react";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const problems = [
-  {
-    id: 1,
-    title: "Two Sum",
-    difficulty: "Easy",
-    tags: ["Array", "Hash Table"],
-  },
-  {
-    id: 2,
-    title: "Add Two Numbers",
-    difficulty: "Medium",
-    tags: ["Linked List", "Math"],
-  },
-  {
-    id: 3,
-    title: "Longest Substring Without Repeating Characters",
-    difficulty: "Medium",
-    tags: ["String", "Sliding Window"],
-  },
-  {
-    id: 4,
-    title: "Median of Two Sorted Arrays",
-    difficulty: "Hard",
-    tags: ["Array", "Binary Search", "Divide and Conquer"],
-  },
-  {
-    id: 5,
-    title: "Valid Parentheses",
-    difficulty: "Easy",
-    tags: ["String", "Stack"],
-  },
-  {
-    id: 6,
-    title: "Merge Intervals",
-    difficulty: "Medium",
-    tags: ["Array", "Sorting"],
-  },
-  {
-    id: 7,
-    title: "Best Time to Buy and Sell Stock",
-    difficulty: "Easy",
-    tags: ["Array", "Dynamic Programming"],
-  },
-  {
-    id: 8,
-    title: "Coin Change",
-    difficulty: "Medium",
-    tags: ["Dynamic Programming"],
-  },
-  {
-    id: 9,
-    title: "Serialize and Deserialize Binary Tree",
-    difficulty: "Hard",
-    tags: ["Tree", "Design"],
-  },
-  {
-    id: 10,
-    title: "Clone Graph",
-    difficulty: "Medium",
-    tags: ["Graph", "Breadth-First Search", "Depth-First Search"],
-  },
-  {
-    id: 11,
-    title: "Maximum Subarray",
-    difficulty: "Easy",
-    tags: ["Array", "Dynamic Programming"],
-  },
-  {
-    id: 12,
-    title: "Product of Array Except Self",
-    difficulty: "Medium",
-    tags: ["Array", "Prefix Sum"],
-  },
-];
-
-const tags = [
-  "Array",
-  "Hash Table",
-  "Linked List",
-  "Math",
-  "Dynamic Programming",
-  "Tree",
-  "Graph",
-  "String",
-  "Sliding Window",
-  "Binary Search",
-  "Divide and Conquer",
-  "Stack",
-  "Sorting",
-  "Breadth-First Search",
-  "Depth-First Search",
-  "Design",
-  "Prefix Sum",
-];
+import axios from "axios";
+import { url } from "../config";
+import { toast } from "sonner";
 
 const difficulties = ["Easy", "Medium", "Hard"];
 
@@ -128,6 +45,25 @@ const PracticeProblemsPage = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+  const [problems, setProblems] = useState([]);
+  const [loading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProblems = async () => {
+      try {
+        const response = await axios.get(`${url}/api/v1/problems`, {
+          withCredentials: true,
+        });
+        setProblems(response.data.problems);
+      } catch (error) {
+        toast.error("Failed to fetch problems");
+        console.error("Failed to fetch problems:", error);
+      }
+      setIsLoading(false);
+    };
+    fetchProblems();
+  }, []);
 
   const handleTagChange = (tag) => {
     setSelectedTags((prevSelectedTags) =>
@@ -136,8 +72,6 @@ const PracticeProblemsPage = () => {
         : [...prevSelectedTags, tag]
     );
   };
-
-  const navigate = useNavigate();
 
   const handleDifficultyChange = (difficulty) => {
     setSelectedDifficulty((prevDifficulty) =>
@@ -162,6 +96,14 @@ const PracticeProblemsPage = () => {
 
   const tagCount = countTags(problems);
   const difficultyCount = countDifficulties(problems);
+
+  const uniqueTags = Array.from(
+    new Set(problems.flatMap((problem) => problem.tags))
+  );
+
+  if (loading) {
+    return <div className="text-center my-40 text-2xl">Loading...</div>;
+  }
 
   return (
     <div className="p-6 h-fit w-full">
@@ -211,7 +153,7 @@ const PracticeProblemsPage = () => {
           </div>
           <h2 className="text-sm font-semibold mt-2 mb-1">Filter by Tags</h2>
           <div className="flex flex-wrap gap-0.5">
-            {tags.map((tag) => (
+            {uniqueTags.map((tag) => (
               <Chip
                 key={tag}
                 onClick={() => handleTagChange(tag)}
@@ -243,72 +185,68 @@ const PracticeProblemsPage = () => {
           <Input
             clearable
             underlined
-            fullWidth
             color="primary"
             placeholder="Search problems..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="mb-4"
           />
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white">
-              <thead>
-                <tr>
-                  <th className="py-2 px-4 bg-blue-100 font-bold uppercase text-sm text-gray-600">
-                    Id
-                  </th>
-                  <th className="py-2 px-4 bg-blue-100 font-bold uppercase text-sm text-gray-600">
-                    Title
-                  </th>
-                  <th className="py-2 px-4 bg-blue-100 font-bold uppercase text-sm text-gray-600">
-                    Difficulty
-                  </th>
-                  <th className="py-2 px-4 bg-blue-100 font-bold uppercase text-sm text-gray-600">
-                    Tags
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProblems.map((problem, index) => (
-                  <tr
-                    key={problem.id}
-                    className={
-                      index % 2 === 0
-                        ? "bg-gray-100 cursor-pointer"
-                        : "cursor-pointer"
-                    }
-                    onClick={() => navigate(`/problems/${problem.id}`)}
-                  >
-                    <td className="py-2 px-4 border-b border-gray-200">
-                      {problem.id}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-200">
-                      {problem.title}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-200">
-                      <Chip
-                        variant="flat"
-                        color={
-                          problem.difficulty === "Easy"
-                            ? "success"
-                            : problem.difficulty === "Medium"
-                            ? "warning"
-                            : problem.difficulty === "Hard"
-                            ? "danger"
-                            : "default"
-                        }
-                      >
-                        {problem.difficulty}
-                      </Chip>
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-200">
-                      {problem.tags.join(", ")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {filteredProblems.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table className="min-w-full bg-white">
+                <TableHeader>
+                  <TableColumn>Id</TableColumn>
+                  <TableColumn>Title</TableColumn>
+                  <TableColumn>Difficulty</TableColumn>
+                  <TableColumn>Tags</TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {filteredProblems.map((problem, index) => (
+                    <TableRow
+                      key={problem._id}
+                      className={
+                        index % 2 === 0
+                          ? "bg-gray-100 cursor-pointer"
+                          : "cursor-pointer"
+                      }
+                      onClick={() =>
+                        navigate(`/problems/${problem.slug}/description`)
+                      }
+                    >
+                      <TableCell className="py-2 px-4 border-b border-gray-200">
+                        {index + 1}
+                      </TableCell>
+                      <TableCell className="py-2 px-4 border-b border-gray-200">
+                        {problem.title}
+                      </TableCell>
+                      <TableCell className="py-2 px-4 border-b border-gray-200">
+                        <Chip
+                          variant="flat"
+                          color={
+                            problem.difficulty === "Easy"
+                              ? "success"
+                              : problem.difficulty === "Medium"
+                              ? "warning"
+                              : problem.difficulty === "Hard"
+                              ? "danger"
+                              : "default"
+                          }
+                        >
+                          {problem.difficulty}
+                        </Chip>
+                      </TableCell>
+                      <TableCell className="py-2 px-4 border-b border-gray-200">
+                        {problem.tags.join(", ")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center my-40 text-2xl text-red-500 font-semibold">
+              No problems found!
+            </div>
+          )}
         </main>
       </div>
     </div>

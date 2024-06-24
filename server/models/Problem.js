@@ -23,6 +23,9 @@ const ProblemSchema = new mongoose.Schema(
       type: [String],
       required: true,
     },
+    solvedBy: {
+      type: [String],
+    },
     input: {
       type: String,
     },
