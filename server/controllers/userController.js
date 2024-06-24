@@ -92,7 +92,9 @@ const updateUserPassword = async (req, res) => {
   // update
   user.password = newPassword;
   await user.save();
-  res.status(StatusCodes.OK).json({ message: "Updated password successfully!" });
+  res
+    .status(StatusCodes.OK)
+    .json({ message: "Updated password successfully!" });
 };
 
 module.exports = {
