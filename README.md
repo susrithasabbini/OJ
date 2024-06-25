@@ -1,1 +1,1 @@
-# OJ
+# Online Judge
