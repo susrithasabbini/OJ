@@ -5,14 +5,17 @@ const { executeJava } = require("../executeJava");
 const { executePython } = require("../executePy");
 
 const runCode = async (req, res) => {
+  // take the language
   const { language = "cpp", code, input } = req.body;
   if (code === undefined) {
     return res.status(404).json({ success: false, error: "Empty code!" });
   }
   try {
+    // generate code and input files
     const filePath = await generateFile(language, code);
     const inputPath = await generateInputFile(input);
     let output;
+    // excecute according to language
     if (language === "cpp") output = await executeCpp(filePath, inputPath);
     else if (language === "java")
       output = await executeJava(filePath, inputPath);

@@ -15,7 +15,8 @@ const executePython = (filepath, inputPath) => {
         return reject({ error: err });
       }
 
-      const command = `python ${filepath}`;
+      // execute python command
+      const command = `python "${filepath}"`;
 
       exec(command, { shell: "cmd.exe" }, (error, stdout, stderr) => {
         if (error) {

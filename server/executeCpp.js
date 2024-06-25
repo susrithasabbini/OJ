@@ -14,6 +14,7 @@ const executeCpp = (filepath, inputPath) => {
   // console.log({ jobId, filepath, inputPath, jobId, outputPath, outPath });
 
   return new Promise((resolve, reject) => {
+    // execute cpp command in cmd
     exec(
       `g++ "${filepath}" -o "${outPath}" && cd "${outputPath}" && "${jobId}.exe" < "${inputPath}"`,
       { shell: "cmd.exe" },

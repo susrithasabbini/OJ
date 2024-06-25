@@ -211,7 +211,7 @@ const EditProfileComponent = ({ isOwner, paramsUser }) => {
           </ModalContent>
         </Modal>
         <Divider className="my-4" />
-        <SkillsComponent isOwner={isOwner} />
+        <SkillsComponent isOwner={isOwner} paramsUser={paramsUser} />
       </div>
     </div>
   );

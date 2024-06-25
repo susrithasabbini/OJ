@@ -3,6 +3,8 @@ const { NOTIFICATION_EMAIL, NOTIFICATION_PASSWORD } = require("../config");
 
 const createTransport = async (SENDER_EMAIL_ID, SENDER_EMAIL_PASSWORD) => {
   try {
+
+    // create transport
     const transport = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -31,6 +33,7 @@ const sendEmail = async ({ to, subject, html }) => {
     html: html,
   };
 
+  // send email
   return transporter.sendMail(mailOptions, (error, info) => {
     if (error) console.error(error);
     else console.log("Email sent: " + info.response);

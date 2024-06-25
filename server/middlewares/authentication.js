@@ -4,6 +4,7 @@ const Token = require("../models/Token");
 const { isTokenValid, attachCookiesToResponse } = require("../utils");
 
 const authenticateUser = async (req, res, next) => {
+  // check tokens
   const { refreshToken, accessToken } = req.signedCookies;
 
   try {
@@ -19,11 +20,14 @@ const authenticateUser = async (req, res, next) => {
       refreshToken: payload.refreshToken,
     });
 
+    // if no token
+
     if (!existingToken || !existingToken?.isValid) {
       res.status(StatusCodes.UNAUTHORIZED).json({ message: "Please login!" });
       // throw new CustomError.UnauthenticatedError("Authentication Invalid");
     }
 
+    // attach cookie
     attachCookiesToResponse({
       res,
       user: payload.user,
@@ -39,6 +43,7 @@ const authenticateUser = async (req, res, next) => {
 };
 
 const authorizePermissions = (...roles) => {
+  // check only specific roles to allow access
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       res

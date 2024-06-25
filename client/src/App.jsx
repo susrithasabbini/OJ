@@ -25,6 +25,7 @@ import AdminProblemsPage from "./pages/Admin/AdminProblemsPage";
 import AdminUsersPage from "./pages/Admin/AdminUsersPage";
 import AdminAddProblemPage from "./pages/Admin/AdminAddProblemPage";
 import AdminEditProblemPage from "./pages/Admin/AdminEditProblemPage";
+import LeaderboardPage from "./pages/LeaderboardPage";
 
 const Root = () => {
   const location = useLocation();
@@ -79,6 +80,7 @@ const Router = createBrowserRouter(
           element={<ProblemDetailPage />}
         />
         <Route path="/account/:username" exact element={<AccountPage />} />
+        <Route path="/leaderboard" exact element={<LeaderboardPage />} />
 
         <Route path="/admin" element={<Outlet />}>
           <Route element={<AdminRoot />}>
@@ -92,6 +94,7 @@ const Router = createBrowserRouter(
             <Route path="users" element={<AdminUsersPage />} />
           </Route>
         </Route>
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Route>
@@ -102,7 +105,7 @@ export default function App() {
   const { isLoading } = useGlobalContext();
   if (isLoading) {
     return (
-      <h1 className="text-2xl text-center text-violet-600 my-40">Loading...</h1>
+      <h1 className="text-2xl text-center text-blue-600 my-40">Loading...</h1>
     );
   }
   return (

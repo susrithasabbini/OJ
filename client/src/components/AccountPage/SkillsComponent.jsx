@@ -1,39 +1,66 @@
 import { useState } from "react";
-import { Button, Input, Chip } from "@nextui-org/react";
+import { Button, Input } from "@nextui-org/react";
 import { toast } from "sonner";
+import axios from "axios";
+import { url } from "../../config";
+import { X } from "lucide-react";
 
-const SkillsComponent = ({ isOwner }) => {
-  const [skills, setSkills] = useState([
-    "JavaScript",
-    "React",
-    "Node.js",
-    "Java",
-    "C++",
-    "C",
-    "Go",
-    "Python",
-  ]);
+const SkillsComponent = ({ isOwner, paramsUser }) => {
+  const [skills, setSkills] = useState(paramsUser.skills);
   const [newSkill, setNewSkill] = useState("");
 
-  const handleAddSkill = () => {
+  const handleAddSkill = async () => {
     if (newSkill.trim() === "") {
       toast.error("Skill cannot be empty", { position: "top-center" });
       return;
     }
 
-    if (skills.includes(newSkill)) {
-      toast.error("Skill already exists", { position: "top-center" });
-      return;
-    }
+    try {
+      const response = await axios.patch(
+        `${url}/api/v1/users/updateUser`,
+        {
+          skill: newSkill,
+        },
+        { withCredentials: true }
+      );
 
-    setSkills([...skills, newSkill]);
-    setNewSkill("");
-    toast.success("Skill added", { position: "top-center" });
+      if (response.status === 200) {
+        setSkills([...skills, newSkill]);
+        setNewSkill("");
+        toast.success("Skill added", { position: "top-center" });
+      } else {
+        toast.error(response.data.message || "Failed to add skill", {
+          position: "top-center",
+        });
+      }
+    } catch (error) {
+      console.error("Error adding skill:", error);
+      toast.error(error.response.data.message, { position: "top-center" });
+    }
   };
 
-  const handleRemoveSkill = (skillToRemove) => {
-    setSkills(skills.filter((skill) => skill !== skillToRemove));
-    toast.success("Skill removed", { position: "top-center" });
+  const handleRemoveSkill = async (skillToRemove) => {
+    try {
+      const response = await axios.patch(
+        `${url}/api/v1/users/updateUser`,
+        {
+          skillToRemove,
+        },
+        { withCredentials: true }
+      );
+
+      if (response.status === 200) {
+        setSkills(skills.filter((skill) => skill !== skillToRemove));
+        toast.success("Skill removed", { position: "top-center" });
+      } else {
+        toast.error(response.data.message || "Failed to remove skill", {
+          position: "top-center",
+        });
+      }
+    } catch (error) {
+      console.error("Error removing skill:", error);
+      toast.error("Failed to remove skill", { position: "top-center" });
+    }
   };
 
   return (
@@ -41,15 +68,20 @@ const SkillsComponent = ({ isOwner }) => {
       <h2 className="text-medium font-bold text-gray-800">Coding Skills</h2>
       <div className="flex flex-wrap gap-2 justify-center">
         {skills.map((skill) => (
-          <Chip
+          <div
             key={skill}
-            color="primary"
-            variant="flat"
-            onClick={() => handleRemoveSkill(skill)}
-            className="cursor-pointer"
+            className="flex items-center bg-blue-100 rounded-2xl px-2 py-1 gap-x-1"
           >
-            {skill}
-          </Chip>
+            <div className="text-blue-500">{skill}</div>
+            {isOwner && (
+              <div
+                className="cursor-pointer"
+                onClick={() => handleRemoveSkill(skill)}
+              >
+                <X color="#1e40af" size={14} />
+              </div>
+            )}
+          </div>
         ))}
       </div>
       {isOwner && (

@@ -51,6 +51,8 @@ const CodingEditor = () => {
 
   const handleLanguageChange = (e) => {
     setLanguage(e.target.value);
+    setInput("");
+    setOutput("");
     setCode(CODE_SNIPPETS[e.target.value]);
   };
 

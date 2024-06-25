@@ -64,7 +64,7 @@ export default function NavbarComponent({ authLinks, user }) {
             <NavbarItem>
               <Link
                 color="primary"
-                href="#"
+                href="/leaderboard"
                 className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
               >
                 Leaderboard
@@ -165,7 +165,7 @@ export default function NavbarComponent({ authLinks, user }) {
             <NavbarItem>
               <Link
                 color="primary"
-                href="#"
+                href="/leaderboard"
                 className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
               >
                 Leaderboard
@@ -209,7 +209,7 @@ export default function NavbarComponent({ authLinks, user }) {
             <NavbarItem>
               <Link
                 color="primary"
-                href="#"
+                href="/leaderboard"
                 className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
               >
                 Leaderboard

@@ -40,7 +40,7 @@ const executeJava = (filepath, inputPath) => {
 
         // Compile the Java file
         exec(
-          `javac ${newJavaFile}`,
+          `javac "${newJavaFile}"`,
           { shell: "cmd.exe" },
           (error, stdout, stderr) => {
             if (error) {
@@ -59,7 +59,7 @@ const executeJava = (filepath, inputPath) => {
               }
 
               // Execute the compiled Java file
-              const runCommand = `java -cp ${dirPath} ${sanitizedJobId}`;
+              const runCommand = `java -cp "${dirPath}" "${sanitizedJobId}"`;
 
               exec(
                 runCommand,

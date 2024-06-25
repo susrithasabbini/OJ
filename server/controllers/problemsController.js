@@ -3,6 +3,7 @@ const Problem = require("../models/Problem");
 
 const getAllProblems = async (req, res) => {
   try {
+    // get only specific fields
     const problems = await Problem.find({}, "slug title difficulty tags");
     res.status(StatusCodes.OK).json({ problems });
   } catch (error) {
@@ -13,6 +14,7 @@ const getAllProblems = async (req, res) => {
 };
 
 const createProblem = async (req, res) => {
+  // take required fields
   const { details, tags, testCases } = req.body;
   if (!details || !tags || !testCases) {
     return res
@@ -39,6 +41,7 @@ const createProblem = async (req, res) => {
 };
 
 const getProblemBySlug = async (req, res) => {
+  // for unique get problem
   try {
     const problem = await Problem.find({ slug: req.params.slug });
     return res.status(StatusCodes.OK).json({ problem });
@@ -61,7 +64,7 @@ const getProblemById = async (req, res) => {
 const editProblem = async (req, res) => {
   const { testCases, details, tags } = req.body;
   const id = req.params.id;
-
+  // edit based on id
   if (!id) {
     return res
       .status(StatusCodes.BAD_REQUEST)
@@ -108,6 +111,7 @@ const editProblem = async (req, res) => {
 };
 
 const deleteProblem = async (req, res) => {
+  // delete based on id
   const id = req.params.id;
 
   if (!id) {

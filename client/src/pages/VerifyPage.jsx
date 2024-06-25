@@ -40,7 +40,7 @@ const VerifyPage = () => {
 
   if (loading)
     return (
-      <h1 className="text-2xl text-center text-violet-600 my-40">Loading...</h1>
+      <h1 className="text-2xl text-center text-blue-600 my-40">Loading...</h1>
     );
 
   if (error)
@@ -52,10 +52,10 @@ const VerifyPage = () => {
 
   return (
     <div className="my-40 flex items-center flex-col justify-center">
-      <Chip className="bg-violet-500 p-6 text-white">Account confirmed!</Chip>
+      <Chip className="bg-blue-500 p-6 text-white">Account confirmed!</Chip>
       <p className="my-2">
         Please{" "}
-        <span className="text-violet-600 font-bold cursor-pointer underline">
+        <span className="text-blue-600 font-bold cursor-pointer underline">
           <Link to={"/login"}>Login</Link>
         </span>
       </p>

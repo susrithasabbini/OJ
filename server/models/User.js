@@ -35,6 +35,9 @@ const UserSchema = new mongoose.Schema({
   verificationToken: {
     type: String,
   },
+  skills: {
+    type: [String],
+  },
   isVerified: {
     type: Boolean,
     default: false,
