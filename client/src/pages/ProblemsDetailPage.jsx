@@ -51,7 +51,7 @@ const ProblemDetail = () => {
         className="custom-split-pane"
       >
         <ProblemStatement problem={problem} />
-        <CodingEditor />
+        <CodingEditor problem={problem} />
       </SplitPane>
     </div>
   );

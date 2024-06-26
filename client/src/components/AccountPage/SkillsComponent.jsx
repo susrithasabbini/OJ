@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Input } from "@nextui-org/react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -6,8 +6,12 @@ import { url } from "../../config";
 import { X } from "lucide-react";
 
 const SkillsComponent = ({ isOwner, paramsUser }) => {
-  const [skills, setSkills] = useState(paramsUser.skills);
+  const [skills, setSkills] = useState([]);
   const [newSkill, setNewSkill] = useState("");
+
+  useEffect(() => {
+    setSkills(paramsUser.skills);
+  }, [paramsUser]);
 
   const handleAddSkill = async () => {
     if (newSkill.trim() === "") {

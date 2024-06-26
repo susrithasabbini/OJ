@@ -54,7 +54,7 @@ export default function NavbarComponent({ authLinks, user }) {
             </NavbarItem>
             <NavbarItem>
               <Link
-                href="#"
+                href="/compete"
                 color="primary"
                 className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
               >
@@ -155,7 +155,7 @@ export default function NavbarComponent({ authLinks, user }) {
             </NavbarItem>
             <NavbarItem>
               <Link
-                href="#"
+                href="/compete"
                 color="primary"
                 className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
               >
@@ -199,7 +199,7 @@ export default function NavbarComponent({ authLinks, user }) {
             </NavbarItem>
             <NavbarItem>
               <Link
-                href="#"
+                href="/compete"
                 color="primary"
                 className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
               >

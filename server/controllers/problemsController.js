@@ -14,29 +14,53 @@ const getAllProblems = async (req, res) => {
 };
 
 const createProblem = async (req, res) => {
-  // take required fields
-  const { details, tags, testCases } = req.body;
-  if (!details || !tags || !testCases) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "Missing required fields" });
-  }
-
-  const data = {
-    ...details,
-    testCases: [...testCases],
-    tags: [...tags],
-    createdBy: req.user.userId,
-  };
-
   try {
-    const newProblem = new Problem(data);
-    const problem = await newProblem.save();
+    const {
+      slug,
+      description,
+      title,
+      difficulty,
+      constraints,
+      tags,
+      testCases,
+    } = req.body;
+    const { input, cppoutput, javaoutput, pythonoutput } = req.files;
 
-    return res.status(StatusCodes.CREATED).json({ problem });
+    const output = [
+      {
+        cpp: cppoutput[0].path,
+        java: javaoutput[0].path,
+        python: pythonoutput[0].path,
+      },
+    ];
+
+    // Handle the uploaded files (input and output)
+    if (!input || !cppoutput || !javaoutput || !pythonoutput) {
+      return res
+        .status(400)
+        .json({ message: "Input and Output files are required" });
+    }
+
+    // Proceed with storing details, tags, testCases, and file URLs or paths in database
+    const problem = new Problem({
+      input: input[0].path,
+      output: [...output],
+      tags,
+      testCases,
+      slug,
+      description,
+      title,
+      difficulty,
+      constraints,
+      createdBy: req.user.userId,
+    });
+
+    await problem.save();
+
+    return res.status(201).json({ problem });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json(error);
+    console.error("Error in creating problem:", error);
+    return res.status(500).json({ message: "Failed to create problem" });
   }
 };
 
@@ -62,51 +86,73 @@ const getProblemById = async (req, res) => {
 };
 
 const editProblem = async (req, res) => {
-  const { testCases, details, tags } = req.body;
+  const { slug, description, title, difficulty, constraints, tags, testCases } =
+    req.body;
+  const { input, cppoutput, javaoutput, pythonoutput } = req.files;
+
   const id = req.params.id;
-  // edit based on id
+
+  // Ensure an ID is provided
   if (!id) {
     return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "Problem ID is required" });
   }
 
+  // Prepare update data object
   const updateData = {};
-
-  if (details) {
-    Object.assign(updateData, details);
-  }
-
-  if (tags) {
-    updateData.tags = [...tags];
-  }
 
   // Always set createdBy field to the current user ID
   updateData.createdBy = req.user._id;
 
   try {
+    // Find the existing problem by ID
     const existingProblem = await Problem.findById(id);
 
+    // Handle case where problem does not exist
     if (!existingProblem) {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ message: "Problem not found" });
     }
 
-    if (testCases) {
-      updateData.testCases = [...testCases];
+    // Update fields if provided in request body
+    if (testCases) updateData.testCases = testCases;
+    if (slug) updateData.slug = slug;
+    if (description) updateData.description = description;
+    if (title) updateData.title = title;
+    if (difficulty) updateData.difficulty = difficulty;
+    if (constraints) updateData.constraints = constraints;
+    if (tags) updateData.tags = tags;
+    if (input) updateData.input = input[0].path;
+
+    // Update output fields only if corresponding files are present
+    if (cppoutput) {
+      updateData.output = updateData.output || [{ cpp: "" }];
+      updateData.output[0].cpp = cppoutput[0].path;
+    }
+    if (javaoutput) {
+      updateData.output = updateData.output || [{ java: "" }];
+      updateData.output[0].java = javaoutput[0].path;
+    }
+    if (pythonoutput) {
+      updateData.output = updateData.output || [{ python: "" }];
+      updateData.output[0].python = pythonoutput[0].path;
     }
 
-    const saved = await Problem.findByIdAndUpdate(id, updateData, {
+    // Perform the update operation and return the updated problem
+    const updatedProblem = await Problem.findByIdAndUpdate(id, updateData, {
       new: true,
     });
 
     return res
       .status(StatusCodes.OK)
-      .json({ problem: saved, message: "Problem updated!" });
+      .json({ problem: updatedProblem, message: "Problem updated!" });
   } catch (error) {
-    console.log(error);
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+    console.error("Error editing problem:", error);
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: "Failed to update problem" });
   }
 };
 

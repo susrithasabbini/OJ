@@ -22,8 +22,10 @@ const AdminEditProblemPage = () => {
     description: "",
     difficulty: "",
     constraints: "",
-    input: "",
-    output: "",
+    input: null,
+    cppoutput: null,
+    javaoutput: null,
+    pythonoutput: null,
   });
   const [testCases, setTestCases] = useState([
     { input: "", output: "", explanation: "", sample: false },
@@ -57,7 +59,9 @@ const AdminEditProblemPage = () => {
           description,
           constraints,
           input,
-          output,
+          cppoutput: output[0]?.cpp,
+          javaoutput: output[0]?.java,
+          pythonoutput: output[0]?.python,
           title,
         });
         setTestCases(testCases);
@@ -71,11 +75,18 @@ const AdminEditProblemPage = () => {
   }, [slug]);
 
   const handleDetailChange = (e) => {
-    const { name, value } = e.target;
-    setDetails((prevDetails) => ({
-      ...prevDetails,
-      [name]: value,
-    }));
+    const { name, value, type, files } = e.target;
+    if (type === "file") {
+      setDetails((prevDetails) => ({
+        ...prevDetails,
+        [name]: files[0], // Store the file object
+      }));
+    } else {
+      setDetails((prevDetails) => ({
+        ...prevDetails,
+        [name]: value,
+      }));
+    }
   };
 
   const handleDifficultyChange = (e) => {
@@ -97,7 +108,7 @@ const AdminEditProblemPage = () => {
   const handleAddTestCase = () => {
     setTestCases((prevTestCases) => [
       ...prevTestCases,
-      { input: "", output: "", explanation: "", sample: false },
+      { input: "", cppoutput: "", explanation: "", sample: false },
     ]);
   };
 
@@ -132,14 +143,35 @@ const AdminEditProblemPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const problemData = {
-      details,
-      testCases,
-      tags,
-    };
+
+    const formData = new FormData();
+    formData.append("slug", details.slug);
+    formData.append("title", details.title);
+    formData.append("description", details.description);
+    formData.append("difficulty", details.difficulty);
+    formData.append("constraints", details.constraints);
+    formData.append("input", details.input); // Append file object
+    formData.append("cppoutput", details.cppoutput); // Append file object
+    formData.append("javaoutput", details.javaoutput); // Append file object
+    formData.append("pythonoutput", details.pythonoutput); // Append file object
+
+    testCases.forEach((testCase, index) => {
+      formData.append(`testCases[${index}][input]`, testCase.input);
+      formData.append(`testCases[${index}][output]`, testCase.output);
+      formData.append(`testCases[${index}][explanation]`, testCase.explanation);
+      formData.append(`testCases[${index}][sample]`, testCase.sample);
+    });
+
+    tags.forEach((tag, index) => {
+      formData.append(`tags[${index}]`, tag);
+    });
+
     try {
-      await axios.put(`${url}/api/v1/problems/${problem._id}`, problemData, {
+      await axios.put(`${url}/api/v1/problems/${problem._id}`, formData, {
         withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
       toast.success("Problem updated successfully");
       navigate("/admin/problems");
@@ -210,26 +242,59 @@ const AdminEditProblemPage = () => {
             onChange={handleDetailChange}
             isRequired={true}
           />
-          <Input
-            clearable
-            underlined
-            fullWidth
-            label="Input Format"
-            autoComplete="false"
-            name="input"
-            value={details?.input}
-            onChange={handleDetailChange}
-          />
-          <Input
-            clearable
-            underlined
-            fullWidth
-            autoComplete="false"
-            label="Output Format"
-            name="output"
-            value={details?.output}
-            onChange={handleDetailChange}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p>Input: </p>
+              <div className="flex items-center justify-center w-full mt-2">
+                <label className="flex flex-row items-center gap-x-2 justify-center w-full h-16 border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 focus:outline-none focus:border-gray-400">
+                  <input
+                    type="file"
+                    name="input"
+                    onChange={handleDetailChange}
+                  />
+                </label>
+              </div>
+            </div>
+            <div>
+              <p>Cpp Output: </p>
+              <div className="flex items-center justify-center w-full mt-2">
+                <label className="flex flex-row items-center gap-x-2 justify-center w-full h-16 border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 focus:outline-none focus:border-gray-400">
+                  <input
+                    type="file"
+                    name="cppoutput"
+                    onChange={handleDetailChange}
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p>Java Output: </p>
+              <div className="flex items-center justify-center w-full mt-2">
+                <label className="flex flex-row items-center gap-x-2 justify-center w-full h-16 border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 focus:outline-none focus:border-gray-400">
+                  <input
+                    type="file"
+                    name="javaoutput"
+                    onChange={handleDetailChange}
+                  />
+                </label>
+              </div>
+            </div>
+            <div>
+              <p>Python Output: </p>
+              <div className="flex items-center justify-center w-full mt-2">
+                <label className="flex flex-row items-center gap-x-2 justify-center w-full h-16 border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 focus:outline-none focus:border-gray-400">
+                  <input
+                    type="file"
+                    name="pythonoutput"
+                    onChange={handleDetailChange}
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
         </Card>
 
         <Card className="p-6 space-y-4">
@@ -252,8 +317,8 @@ const AdminEditProblemPage = () => {
                   fullWidth
                   autoComplete="false"
                   label={`Output ${index + 1}`}
-                  name="output"
-                  value={testCase?.output}
+                  name="cppoutput"
+                  value={testCase?.cppoutput}
                   onChange={(e) => handleTestCaseChange(index, e)}
                   isRequired={true}
                 />

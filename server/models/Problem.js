@@ -29,9 +29,19 @@ const ProblemSchema = new mongoose.Schema(
     input: {
       type: String,
     },
-    output: {
-      type: String,
-    },
+    output: [
+      {
+        cpp: {
+          type: String,
+        },
+        java: {
+          type: String,
+        },
+        python: {
+          type: String,
+        },
+      },
+    ],
     constraints: {
       type: String,
     },

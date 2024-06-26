@@ -18,15 +18,15 @@ const CODE_SNIPPETS = {
   java: "public class Main {\n\tpublic static void main(String[] args) {\n\t\t//code\n\t}\n}",
 };
 
-const CodingEditor = () => {
+const CodingEditor = ({ problem }) => {
   const [code, setCode] = useState(CODE_SNIPPETS["cpp"]);
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [language, setLanguage] = useState("cpp");
-  const [running, setRunning] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleRunCode = async () => {
-    setRunning(true);
+    setLoading(true);
     setOutput("Running...");
     const payload = {
       language,
@@ -35,17 +35,35 @@ const CodingEditor = () => {
     };
 
     try {
-      const { data } = await axios.post(`${url}/api/v1/code/run`, payload);
+      const { data } = await axios.post(`${url}/api/v1/code/run`, payload, {
+        withCredentials: true,
+      });
       console.log(data);
-      setRunning(false);
+      setLoading(false);
       setOutput(data.output);
     } catch (error) {
-      console.log(error.response);
+      console.log(error.response.data.error.stderr);
+      setLoading(false);
+      setOutput(error.response.data.error.stderr);
     }
   };
 
-  const handleSubmitCode = () => {
-    setOutput("Submitting code...");
+  const handleSubmitCode = async () => {
+    setLoading(true);
+    setOutput("Submitting...");
+    const payload = { language, code, problemId: problem[0]._id };
+    try {
+      const { data } = await axios.post(`${url}/api/v1/code/submit`, payload, {
+        withCredentials: true,
+      });
+      console.log(data);
+      setLoading(false);
+      setOutput(data.output);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+      setOutput(error.response.data.error.stderr);
+    }
     setInput("");
   };
 
@@ -96,12 +114,12 @@ const CodingEditor = () => {
         <div className="flex flex-row">
           <div className="flex-[80%]">
             <Tabs aria-label="Options" className="mt-3">
-              {!running && (
+              {!loading && (
                 <Tab key="input" title="Input">
                   <Textarea
                     className="w-full mb-2 flex-1"
                     placeholder="Input"
-                    value={`${running ? "Running..." : input}`}
+                    value={`${loading ? "Running..." : input}`}
                     onChange={(e) => setInput(e.target.value)}
                   />
                 </Tab>
@@ -110,7 +128,14 @@ const CodingEditor = () => {
                 <Textarea
                   className="w-full mb-2 flex-1"
                   placeholder="Output"
-                  value={output}
+                  value={output.toUpperCase()}
+                  color={
+                    output === "accepted"
+                      ? "success"
+                      : output === "failed"
+                      ? "danger"
+                      : "default"
+                  }
                   readOnly
                 />
               </Tab>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGlobalContext } from "../../context";
 import axios from "axios";
 import { url } from "../../config";
@@ -85,6 +85,8 @@ const EditProfileComponent = ({ isOwner, paramsUser }) => {
     setIsLoading(false);
   };
 
+  useEffect(() => {}, [isOwner, paramsUser]);
+
   return (
     <div className="px-5 rounded-xl flex flex-1 justify-center h-fit py-10 shadow-md">
       <div className="w-full flex flex-col gap-y-3 items-center">
@@ -115,7 +117,7 @@ const EditProfileComponent = ({ isOwner, paramsUser }) => {
         ) : (
           <div className="flex items-center gap-x-3 mt-3">
             <p className="font-bold text-2xl text-gray-800">
-              {user?.username || paramsUser?.username}
+              {isOwner ? user?.username : paramsUser?.username}
             </p>
             {isOwner && (
               <div
@@ -129,7 +131,7 @@ const EditProfileComponent = ({ isOwner, paramsUser }) => {
         )}
         <p className="flex items-center gap-x-3 text-sm mt-2">
           <Mail color="#3b82f6" />
-          <span>{user?.email || paramsUser?.email}</span>
+          <span>{isOwner ? user?.email : paramsUser?.email}</span>
         </p>
         {isOwner && (
           <Button

@@ -84,6 +84,100 @@ const executeJava = (filepath, inputPath) => {
   });
 };
 
+const validateJavaTestCases = (filePath, inputPath, expectedOutputPath) => {
+  const jobId = path.basename(filePath).split(".")[0];
+  const sanitizedJobId = sanitizeJobId(jobId);
+  const dirPath = path.dirname(filePath);
+  const newJavaFile = path.join(dirPath, `${sanitizedJobId}.java`);
+  const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
+
+  // console.log({
+  //   jobId,
+  //   sanitizedJobId,
+  //   dirPath,
+  //   newJavaFile,
+  //   filePath,
+  //   inputPath,
+  //   expectedOutputPath,
+  //   codeOutputPath,
+  // });
+
+  return new Promise((resolve, reject) => {
+    // Read the original Java file contents
+    fs.readFile(filePath, "utf8", (err, fileData) => {
+      if (err) {
+        return reject({ error: err });
+      }
+
+      // Replace the class name with the sanitized job ID
+      const modifiedData = fileData.replace(
+        /public class \w+/,
+        `public class ${sanitizedJobId}`
+      );
+
+      // Write the modified data to a new Java file
+      fs.writeFile(newJavaFile, modifiedData, "utf8", (err) => {
+        if (err) {
+          return reject({ error: err });
+        }
+
+        // Compile the Java file
+        exec(
+          `javac "${newJavaFile}"`,
+          { shell: "cmd.exe" },
+          (error, stdout, stderr) => {
+            if (error) {
+              reject({ error, stderr });
+              return;
+            }
+            if (stderr) {
+              reject(stderr);
+              return;
+            }
+
+            // Execute the compiled Java file with input redirection
+            const runCommand = `java "${newJavaFile}" < "${inputPath}" > "${codeOutputPath}"`;
+
+            exec(
+              runCommand,
+              { shell: "cmd.exe" },
+              async (error, stdout, stderr) => {
+                if (error) {
+                  return reject({ error, stderr });
+                } else if (stderr) {
+                  return reject(stderr);
+                }
+
+                try {
+                  // Read generated and expected output files
+                  const generatedOutput = await fs.promises.readFile(
+                    codeOutputPath,
+                    "utf8"
+                  );
+                  const expectedOutput = await fs.promises.readFile(
+                    expectedOutputPath,
+                    "utf8"
+                  );
+
+                  // Compare generated output with expected output
+                  if (generatedOutput.trim() === expectedOutput.trim()) {
+                    resolve("accepted");
+                  } else {
+                    resolve("failed");
+                  }
+                } catch (readError) {
+                  reject(readError);
+                }
+              }
+            );
+          }
+        );
+      });
+    });
+  });
+};
+
 module.exports = {
   executeJava,
+  validateJavaTestCases,
 };

@@ -33,6 +33,53 @@ const executePython = (filepath, inputPath) => {
   });
 };
 
+const validatePythonTestCases = (filePath, inputPath, expectedOutputPath) => {
+  const jobId = path.basename(filePath).split(".")[0];
+  const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
+
+  // console.log({
+  //   jobId,
+  //   codeOutputPath,
+  //   filePath,
+  //   inputPath,
+  //   expectedOutputPath,
+  // });
+
+  return new Promise((resolve, reject) => {
+    exec(
+      `python "${filePath}" < "${inputPath}" > "${codeOutputPath}"`,
+      { shell: "cmd.exe" },
+      async (error, stdout, stderr) => {
+        if (error) {
+          return reject({ error, stderr });
+        } else if (stderr) {
+          return reject(stderr);
+        }
+
+        try {
+          const generatedOutput = await fs.promises.readFile(
+            codeOutputPath,
+            "utf8"
+          );
+          const expectedOutput = await fs.promises.readFile(
+            expectedOutputPath,
+            "utf8"
+          );
+
+          if (generatedOutput.trim() === expectedOutput.trim()) {
+            resolve("accepted");
+          } else {
+            resolve("failed");
+          }
+        } catch (readError) {
+          reject(readError);
+        }
+      }
+    );
+  });
+};
+
 module.exports = {
   executePython,
+  validatePythonTestCases,
 };

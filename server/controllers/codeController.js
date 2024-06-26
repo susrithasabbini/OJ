@@ -1,14 +1,20 @@
 const { generateInputFile } = require("../generateInputFile");
 const { generateFile } = require("../generateFile");
-const { executeCpp } = require("../executeCpp");
-const { executeJava } = require("../executeJava");
-const { executePython } = require("../executePy");
+const {
+  executeCpp,
+  validateTestCases,
+  validateCppTestCases,
+} = require("../executeCpp");
+const { executeJava, validateJavaTestCases } = require("../executeJava");
+const { executePython, validatePythonTestCases } = require("../executePy");
+const Problem = require("../models/Problem");
+const { StatusCodes } = require("http-status-codes");
 
 const runCode = async (req, res) => {
   // take the language
   const { language = "cpp", code, input } = req.body;
   if (code === undefined) {
-    return res.status(404).json({ success: false, error: "Empty code!" });
+    return res.status(404).json({ message: "Empty code!" });
   }
   try {
     // generate code and input files
@@ -28,79 +34,52 @@ const runCode = async (req, res) => {
 };
 
 const submitCode = async (req, res) => {
-  let { language = "cpp", code, userInput, problemId, userId } = req.body;
+  let { language, code, userInput, problemId, userId } = req.body;
 
   if (code === undefined || !code) {
-    return res.status(400).json({ success: false, error: "Empty code body!" });
+    return res.status(400).json({ error: "Empty code body!" });
   }
 
-  let job;
   try {
     // need to generate a c++ file with content from the request
     const filepath = await generateFile(language, code);
+    let output;
 
-    job = await Job({ language, filepath, userInput }).save();
-    const jobId = job["_id"];
-    addSubmitToQueue(jobId, problemId, userId);
+    const problem = await Problem.findById(problemId);
+    if (!problem)
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "No problem found!" });
 
-    res.status(201).json({ sueccess: true, jobId });
+    const expectedOutputPath = problem.output;
+    const inputPath = problem.input;
+
+    if (language === "cpp")
+      output = await validateCppTestCases(
+        filepath,
+        inputPath,
+        expectedOutputPath[0].cpp
+      );
+    else if (language === "java")
+      output = await validateJavaTestCases(
+        filepath,
+        inputPath,
+        expectedOutputPath[0].java
+      );
+    else if (language === "python")
+      output = await validatePythonTestCases(
+        filepath,
+        inputPath,
+        expectedOutputPath[0].python
+      );
+
+    res.json({ filepath, inputPath, output });
   } catch (err) {
     return res.status(500).json(err);
-  }
-};
-
-const getStatus = async (req, res) => {
-  if (!req.params.id) {
-    return res.status(400).json("Missing required fields");
-  }
-
-  try {
-    const job = await Job.findById(req.params.id);
-
-    res.status(200).json({ job, success: true });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error, success: false });
-  }
-};
-
-const getAllSubmissions = async (req, res) => {
-  const userId = req.user._id;
-  const problemId = req.params.id;
-  if (!userId) return res.status(400).json("Missing required fields.");
-
-  try {
-    const submissions = await Job.find({
-      userId,
-      problemId,
-      verdict: { $exists: true },
-    }).sort({ submittedAt: -1 });
-    res.status(200).json(submissions);
-  } catch (error) {
-    return res.status(500).json(error);
-  }
-};
-
-const downloadSubmission = async (req, res) => {
-  const id = req.params.id;
-
-  if (!id) return res.status(400).json("Missing required fields");
-
-  try {
-    const job = await Job.findById(id);
-    if (!job) {
-      return res.status(400).json("File not found");
-    }
-    res.download(job.filepath);
-  } catch (error) {
-    return res.status(500).json(error);
   }
 };
 
 module.exports = {
   runCode,
   submitCode,
-  getStatus,
-  getAllSubmissions,
-  downloadSubmission,
 };

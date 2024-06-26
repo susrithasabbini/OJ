@@ -15,7 +15,6 @@ import { useGlobalContext } from "../context";
 const LeaderboardPage = () => {
   const { user } = useGlobalContext();
 
-  console.log(user.username);
   const [users] = useState([
     {
       id: 1,
@@ -37,6 +36,10 @@ const LeaderboardPage = () => {
     { id: 13, username: "John Doe", points: 800 },
   ]);
 
+  const loggedInUser = users.find((u) => u.username === user.username);
+  const loggedInUserRank =
+    users.findIndex((u) => u.username === user.username) + 1;
+
   return (
     <div className="p-6 h-fit w-full">
       <h1 className="text-3xl font-bold mb-8 text-gray-900">Leaderboard</h1>
@@ -57,6 +60,19 @@ const LeaderboardPage = () => {
             <TableColumn className="text-left p-4">Points</TableColumn>
           </TableHeader>
           <TableBody>
+            {loggedInUserRank !== 1 && (
+              <TableRow className="bg-yellow-100/60 hover:bg-blue-100 transition-all">
+                <TableCell className="py-2 px-4 border-b border-gray-200 font-semibold">
+                  {loggedInUserRank}
+                </TableCell>
+                <TableCell className="py-2 px-4 border-b border-gray-200 font-semibold">
+                  {loggedInUser.username}
+                </TableCell>
+                <TableCell className="py-2 px-4 border-b border-gray-200 font-semibold">
+                  {loggedInUser.points}
+                </TableCell>
+              </TableRow>
+            )}
             {users.map((u, index) => (
               <TableRow
                 key={u.id}

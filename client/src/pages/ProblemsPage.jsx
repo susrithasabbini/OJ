@@ -188,6 +188,7 @@ const PracticeProblemsPage = () => {
             color="primary"
             placeholder="Search problems..."
             value={searchTerm}
+            className="mb-2"
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           {filteredProblems.length > 0 ? (

@@ -1,24 +1,18 @@
-const router = require("express").Router(); //Used to create the API's routes
+const router = require("express").Router();
 const {
   runCode,
   submitCode,
-  getStatus,
-  getAllSubmissions,
-  downloadSubmission,
+  // getStatus,
+  // getAllSubmissions,
+  // downloadSubmission,
 } = require("../controllers/codeController");
 const { authenticateUser } = require("../middlewares/authentication");
 
-// Code Related Route
-router.post("/run", runCode);
-
+router.post("/run", authenticateUser, runCode);
 router.post("/submit", authenticateUser, submitCode);
 
-router.get("/status/:id", getStatus);
-
-// Get All Submission
-router.get("/submission/:id", authenticateUser, getAllSubmissions);
-
-// Download Submission
-router.get("/download/:id", downloadSubmission);
+// router.get("/status/:id", getStatus);
+// router.get("/submission/:id", authenticateUser, getAllSubmissions);
+// router.get("/download/:id", downloadSubmission);
 
 module.exports = router;

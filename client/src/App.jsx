@@ -26,6 +26,8 @@ import AdminUsersPage from "./pages/Admin/AdminUsersPage";
 import AdminAddProblemPage from "./pages/Admin/AdminAddProblemPage";
 import AdminEditProblemPage from "./pages/Admin/AdminEditProblemPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
+import CompetePage from "./pages/CompetePage";
+import ContestDetailPage from "./pages/ContestDetailPage";
 
 const Root = () => {
   const location = useLocation();
@@ -81,6 +83,8 @@ const Router = createBrowserRouter(
         />
         <Route path="/account/:username" exact element={<AccountPage />} />
         <Route path="/leaderboard" exact element={<LeaderboardPage />} />
+        <Route path="/compete" exact element={<CompetePage />} />
+        <Route path="/compete/:contestId" element={<ContestDetailPage />} />
 
         <Route path="/admin" element={<Outlet />}>
           <Route element={<AdminRoot />}>
