@@ -1,27 +1,21 @@
 const { generateInputFile } = require("../generateInputFile");
 const { generateFile } = require("../generateFile");
-const {
-  executeCpp,
-  validateTestCases,
-  validateCppTestCases,
-} = require("../executeCpp");
+const { executeCpp, validateCppTestCases } = require("../executeCpp");
 const { executeJava, validateJavaTestCases } = require("../executeJava");
 const { executePython, validatePythonTestCases } = require("../executePy");
 const Problem = require("../models/Problem");
 const { StatusCodes } = require("http-status-codes");
+const { downloadInputFromFirebase, downloadTestInputsFromFirebase } = require("../firebase/downloadFileFromFirebase");
 
 const runCode = async (req, res) => {
-  // take the language
   const { language = "cpp", code, input } = req.body;
-  if (code === undefined) {
+  if (!code) {
     return res.status(404).json({ message: "Empty code!" });
   }
   try {
-    // generate code and input files
     const filePath = await generateFile(language, code);
     const inputPath = await generateInputFile(input);
     let output;
-    // excecute according to language
     if (language === "cpp") output = await executeCpp(filePath, inputPath);
     else if (language === "java")
       output = await executeJava(filePath, inputPath);
@@ -29,7 +23,7 @@ const runCode = async (req, res) => {
       output = await executePython(filePath, inputPath);
     res.json({ filePath, inputPath, output });
   } catch (error) {
-    res.status(500).json({ error: error });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -41,7 +35,7 @@ const submitCode = async (req, res) => {
   }
 
   try {
-    // need to generate a c++ file with content from the request
+    // Generate a file with content from the request
     const filepath = await generateFile(language, code);
     let output;
 
@@ -52,7 +46,7 @@ const submitCode = async (req, res) => {
         .json({ message: "No problem found!" });
 
     const expectedOutputPath = problem.output;
-    const inputPath = problem.input;
+    const inputPath = await downloadTestInputsFromFirebase(problem.input);
 
     if (language === "cpp")
       output = await validateCppTestCases(
@@ -75,6 +69,7 @@ const submitCode = async (req, res) => {
 
     res.json({ filepath, inputPath, output });
   } catch (err) {
+    console.error("Error submitting code:", err);
     return res.status(500).json(err);
   }
 };

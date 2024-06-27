@@ -1,6 +1,11 @@
 const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const {
+  downloadCodeFromFirebase,
+  downloadInputFromFirebase,
+  downloadJavaOutputFromFirebase,
+} = require("./firebase/downloadFileFromFirebase");
 
 const outputPath = path.join(__dirname, "outputs");
 
@@ -13,81 +18,80 @@ const sanitizeJobId = (jobId) => {
   return `Class_${jobId.replace(/[^a-zA-Z0-9]/g, "_")}`;
 };
 
-const executeJava = (filepath, inputPath) => {
-  const jobId = path.basename(filepath).split(".")[0];
-  const sanitizedJobId = sanitizeJobId(jobId);
-  const dirPath = path.dirname(filepath);
-  const newJavaFile = path.join(dirPath, `${sanitizedJobId}.java`);
+const executeJava = async (filepath, inputpath) => {
+  try {
+    const localFilePath = await downloadCodeFromFirebase(filepath);
+    const localInputPath = await downloadInputFromFirebase(inputpath);
 
-  return new Promise((resolve, reject) => {
+    const jobId = path.basename(localFilePath).split(".")[0];
+    const sanitizedJobId = sanitizeJobId(jobId);
+
+    const dirPath = path.dirname(localFilePath);
+    const newJavaFile = path.join(dirPath, `${sanitizedJobId}.java`);
+
     // Read the original Java file contents
-    fs.readFile(filepath, "utf8", (err, fileData) => {
-      if (err) {
-        return reject({ error: err });
-      }
+    const fileData = await fs.promises.readFile(localFilePath, "utf8");
 
-      // Replace the class name with the sanitized job ID
-      const modifiedData = fileData.replace(
-        /public class \w+/,
-        `public class ${sanitizedJobId}`
-      );
+    // Replace the class name with the sanitized job ID
+    const modifiedData = fileData.replace(
+      /public class \w+/,
+      `public class ${sanitizedJobId}`
+    );
 
-      // Write the modified data to a new Java file
-      fs.writeFile(newJavaFile, modifiedData, "utf8", (err) => {
-        if (err) {
-          return reject({ error: err });
-        }
+    // Write the modified data to a new Java file
+    await fs.promises.writeFile(newJavaFile, modifiedData, "utf8");
 
-        // Compile the Java file
-        exec(
-          `javac "${newJavaFile}"`,
-          { shell: "cmd.exe" },
-          (error, stdout, stderr) => {
-            if (error) {
-              reject({ error, stderr });
-              return;
-            }
-            if (stderr) {
-              reject(stderr);
-              return;
-            }
-
-            // Read the input file contents
-            fs.readFile(inputPath, "utf8", (err, inputData) => {
-              if (err) {
-                return reject({ error: err });
-              }
-
-              // Execute the compiled Java file
-              const runCommand = `java -cp "${dirPath}" "${sanitizedJobId}"`;
-
-              exec(
-                runCommand,
-                { shell: "cmd.exe" },
-                (error, stdout, stderr) => {
-                  if (error) {
-                    reject({ error, stderr });
-                    return;
-                  }
-                  if (stderr) {
-                    reject(stderr);
-                    return;
-                  }
-                  resolve(stdout);
-                }
-              ).stdin.end(inputData); // Pass the input data to the process stdin
-            });
+    // Compile the Java file
+    await new Promise((resolve, reject) => {
+      exec(
+        `javac "${newJavaFile}"`,
+        { shell: "cmd.exe" },
+        (error, stdout, stderr) => {
+          if (error) {
+            reject({ error, stderr });
+          } else if (stderr) {
+            reject(stderr);
+          } else {
+            resolve(stdout);
           }
-        );
-      });
+        }
+      );
     });
-  });
+
+    // Read the input file contents
+    const inputData = await fs.promises.readFile(localInputPath, "utf8");
+
+    // Execute the compiled Java file
+    return new Promise((resolve, reject) => {
+      const runCommand = `java -cp "${dirPath}" "${sanitizedJobId}"`;
+      const process = exec(
+        runCommand,
+        { shell: "cmd.exe" },
+        (error, stdout, stderr) => {
+          if (error) {
+            reject({ error, stderr });
+          } else if (stderr) {
+            reject(stderr);
+          } else {
+            resolve(stdout);
+          }
+        }
+      );
+      process.stdin.end(inputData); // Pass the input data to the process stdin
+    });
+  } catch (error) {
+    throw error;
+  }
 };
 
-const validateJavaTestCases = (filePath, inputPath, expectedOutputPath) => {
-  const jobId = path.basename(filePath).split(".")[0];
+const validateJavaTestCases = async (filePath, inputpath, expectedOutputPath) => {
+  const localFilePath = await downloadCodeFromFirebase(filePath);
+  const localExpectedOutputPath = await downloadJavaOutputFromFirebase(
+    expectedOutputPath
+  );
+  const jobId = path.basename(localFilePath).split(".")[0];
   const sanitizedJobId = sanitizeJobId(jobId);
-  const dirPath = path.dirname(filePath);
+  const dirPath = path.dirname(localFilePath);
   const newJavaFile = path.join(dirPath, `${sanitizedJobId}.java`);
   const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
 
@@ -97,14 +101,14 @@ const validateJavaTestCases = (filePath, inputPath, expectedOutputPath) => {
   //   dirPath,
   //   newJavaFile,
   //   filePath,
-  //   inputPath,
+  //   inputpath,
   //   expectedOutputPath,
   //   codeOutputPath,
   // });
 
   return new Promise((resolve, reject) => {
     // Read the original Java file contents
-    fs.readFile(filePath, "utf8", (err, fileData) => {
+    fs.readFile(localFilePath, "utf8", (err, fileData) => {
       if (err) {
         return reject({ error: err });
       }
@@ -136,7 +140,7 @@ const validateJavaTestCases = (filePath, inputPath, expectedOutputPath) => {
             }
 
             // Execute the compiled Java file with input redirection
-            const runCommand = `java "${newJavaFile}" < "${inputPath}" > "${codeOutputPath}"`;
+            const runCommand = `java "${newJavaFile}" < "${inputpath}" > "${codeOutputPath}"`;
 
             exec(
               runCommand,
@@ -155,7 +159,7 @@ const validateJavaTestCases = (filePath, inputPath, expectedOutputPath) => {
                     "utf8"
                   );
                   const expectedOutput = await fs.promises.readFile(
-                    expectedOutputPath,
+                    localExpectedOutputPath,
                     "utf8"
                   );
 

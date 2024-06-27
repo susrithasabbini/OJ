@@ -128,7 +128,11 @@ const CodingEditor = ({ problem }) => {
                 <Textarea
                   className="w-full mb-2 flex-1"
                   placeholder="Output"
-                  value={output.toUpperCase()}
+                  value={`${
+                    output === "accepted" || output === "failed"
+                      ? output.toUpperCase()
+                      : output
+                  }`}
                   color={
                     output === "accepted"
                       ? "success"

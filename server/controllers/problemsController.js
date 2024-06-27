@@ -1,5 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const Problem = require("../models/Problem");
+const { saveFileToFirebase } = require("../firebase/saveFileToFirebase");
 
 const getAllProblems = async (req, res) => {
   try {
@@ -26,24 +27,49 @@ const createProblem = async (req, res) => {
     } = req.body;
     const { input, cppoutput, javaoutput, pythonoutput } = req.files;
 
-    const output = [
-      {
-        cpp: cppoutput[0].path,
-        java: javaoutput[0].path,
-        python: pythonoutput[0].path,
-      },
-    ];
-
     // Handle the uploaded files (input and output)
-    if (!input || !cppoutput || !javaoutput || !pythonoutput) {
+    if (!input && !cppoutput && !javaoutput && !pythonoutput) {
       return res
         .status(400)
         .json({ message: "Input and Output files are required" });
     }
 
-    // Proceed with storing details, tags, testCases, and file URLs or paths in database
+    // Save input file to Firebase storage
+    const inputFilePath = await saveFileToFirebase(
+      "testinputs",
+      "txt",
+      input[0].buffer
+    );
+
+    // Save output files to Firebase storage
+    const cppOutputFilePath = await saveFileToFirebase(
+      "cppoutputs",
+      "txt",
+      cppoutput[0].buffer
+    );
+    const javaOutputFilePath = await saveFileToFirebase(
+      "javaoutputs",
+      "txt",
+      javaoutput[0].buffer
+    );
+    const pythonOutputFilePath = await saveFileToFirebase(
+      "pythonoutputs",
+      "txt",
+      pythonoutput[0].buffer
+    );
+
+    // Create an array of output file paths
+    const output = [
+      {
+        cpp: cppOutputFilePath,
+        java: javaOutputFilePath,
+        python: pythonOutputFilePath,
+      },
+    ];
+
+    // Create a new Problem instance
     const problem = new Problem({
-      input: input[0].path,
+      input: inputFilePath,
       output: [...output],
       tags,
       testCases,
@@ -55,12 +81,16 @@ const createProblem = async (req, res) => {
       createdBy: req.user.userId,
     });
 
+    // Save the problem to the database
     await problem.save();
 
-    return res.status(201).json({ problem });
+    return res.status(StatusCodes.CREATED).json({ problem });
   } catch (error) {
     console.error("Error in creating problem:", error);
-    return res.status(500).json({ message: "Failed to create problem" });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Failed to create problem",
+      error: error.message,
+    });
   }
 };
 
@@ -107,7 +137,7 @@ const editProblem = async (req, res) => {
 
   try {
     // Find the existing problem by ID
-    const existingProblem = await Problem.findById(id);
+    let existingProblem = await Problem.findById(id);
 
     // Handle case where problem does not exist
     if (!existingProblem) {
@@ -124,30 +154,63 @@ const editProblem = async (req, res) => {
     if (difficulty) updateData.difficulty = difficulty;
     if (constraints) updateData.constraints = constraints;
     if (tags) updateData.tags = tags;
-    if (input) updateData.input = input[0].path;
 
-    // Update output fields only if corresponding files are present
+    // Initialize updateData.output if not already initialized
+    if (!updateData.output) {
+      updateData.output = [];
+    }
+
+    // Handle file uploads and update paths
+    if (input) {
+      const inputFilePath = await saveFileToFirebase(
+        "testinputs",
+        "txt",
+        input[0].buffer // Accessing buffer directly
+      );
+      updateData.input = inputFilePath;
+    }
+
+    // Construct a single object for all output file paths
+    const outputObject = {};
+
     if (cppoutput) {
-      updateData.output = updateData.output || [{ cpp: "" }];
-      updateData.output[0].cpp = cppoutput[0].path;
+      const cppOutputFilePath = await saveFileToFirebase(
+        "cppoutputs",
+        "txt",
+        cppoutput[0].buffer // Accessing buffer directly
+      );
+      outputObject.cpp = cppOutputFilePath;
     }
+
     if (javaoutput) {
-      updateData.output = updateData.output || [{ java: "" }];
-      updateData.output[0].java = javaoutput[0].path;
+      const javaOutputFilePath = await saveFileToFirebase(
+        "javaoutputs",
+        "txt",
+        javaoutput[0].buffer // Accessing buffer directly
+      );
+      outputObject.java = javaOutputFilePath;
     }
+
     if (pythonoutput) {
-      updateData.output = updateData.output || [{ python: "" }];
-      updateData.output[0].python = pythonoutput[0].path;
+      const pythonOutputFilePath = await saveFileToFirebase(
+        "pythonoutputs",
+        "txt",
+        pythonoutput[0].buffer // Accessing buffer directly
+      );
+      outputObject.python = pythonOutputFilePath;
     }
+
+    // Push the single output object containing all file paths to updateData.output
+    updateData.output.push(outputObject);
 
     // Perform the update operation and return the updated problem
-    const updatedProblem = await Problem.findByIdAndUpdate(id, updateData, {
+    existingProblem = await Problem.findByIdAndUpdate(id, updateData, {
       new: true,
     });
 
     return res
       .status(StatusCodes.OK)
-      .json({ problem: updatedProblem, message: "Problem updated!" });
+      .json({ problem: existingProblem, message: "Problem updated!" });
   } catch (error) {
     console.error("Error editing problem:", error);
     return res

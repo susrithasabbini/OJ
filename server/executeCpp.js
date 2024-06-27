@@ -1,6 +1,11 @@
 const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const {
+  downloadCodeFromFirebase,
+  downloadInputFromFirebase,
+  downloadCppOutputFromFirebase,
+} = require("./firebase/downloadFileFromFirebase");
 
 const outputPath = path.join(__dirname, "outputs");
 
@@ -8,15 +13,16 @@ if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
-const executeCpp = (filepath, inputPath) => {
-  const jobId = path.basename(filepath).split(".")[0];
-  const outPath = path.join(path.dirname(filepath), `${jobId}.exe`);
-  // console.log({ jobId, filepath, inputPath, jobId, outputPath, outPath });
+const executeCpp = async (filepath, inputpath) => {
+  const localFilePath = await downloadCodeFromFirebase(filepath);
+  const localInputPath = await downloadInputFromFirebase(inputpath);
+
+  const jobId = path.basename(localFilePath).split(".")[0];
+  const outPath = path.join(path.dirname(localFilePath), `${jobId}.exe`);
 
   return new Promise((resolve, reject) => {
-    // execute cpp command in cmd
     exec(
-      `g++ "${filepath}" -o "${outPath}" && "${outPath}" < "${inputPath}"`,
+      `g++ "${localFilePath}" -o "${outPath}" && "${outPath}" < "${localInputPath}"`,
       { shell: "cmd.exe" },
       (error, stdout, stderr) => {
         if (error) {
@@ -31,14 +37,23 @@ const executeCpp = (filepath, inputPath) => {
   });
 };
 
-const validateCppTestCases = (filePath, inputPath, expectedOutputPath) => {
-  const jobId = path.basename(filePath).split(".")[0];
+const validateCppTestCases = async (
+  filePath,
+  inputPath,
+  expectedOutputPath
+) => {
+  const localFilePath = await downloadCodeFromFirebase(filePath);
+  const localExpectedOutputPath = await downloadCppOutputFromFirebase(
+    expectedOutputPath
+  );
+
+  const jobId = path.basename(localFilePath).split(".")[0];
   const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
-  const outPath = path.join(path.dirname(filePath), `${jobId}.exe`);
+  const outPath = path.join(path.dirname(localFilePath), `${jobId}.exe`);
 
   return new Promise((resolve, reject) => {
     exec(
-      `g++ "${filePath}" -o "${outPath}" && "${outPath}" < "${inputPath}" > "${codeOutputPath}"`,
+      `g++ "${localFilePath}" -o "${outPath}" && "${outPath}" < "${inputPath}" > "${codeOutputPath}"`,
       { shell: "cmd.exe" },
       async (error, stdout, stderr) => {
         if (error) {
@@ -52,8 +67,9 @@ const validateCppTestCases = (filePath, inputPath, expectedOutputPath) => {
             codeOutputPath,
             "utf8"
           );
+
           const expectedOutput = await fs.promises.readFile(
-            expectedOutputPath,
+            localExpectedOutputPath,
             "utf8"
           );
 
