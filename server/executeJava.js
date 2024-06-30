@@ -1,11 +1,12 @@
-const { exec } = require("child_process");
-const fs = require("fs");
-const path = require("path");
 const {
   downloadCodeFromFirebase,
   downloadInputFromFirebase,
   downloadJavaOutputFromFirebase,
 } = require("./firebase/downloadFileFromFirebase");
+
+const { exec } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
 const outputPath = path.join(__dirname, "outputs");
 
@@ -18,97 +19,15 @@ const sanitizeJobId = (jobId) => {
   return `Class_${jobId.replace(/[^a-zA-Z0-9]/g, "_")}`;
 };
 
-const executeJava = async (filepath, inputpath) => {
-  try {
-    const localFilePath = await downloadCodeFromFirebase(filepath);
-    const localInputPath = await downloadInputFromFirebase(inputpath);
-
-    const jobId = path.basename(localFilePath).split(".")[0];
-    const sanitizedJobId = sanitizeJobId(jobId);
-
-    const dirPath = path.dirname(localFilePath);
-    const newJavaFile = path.join(dirPath, `${sanitizedJobId}.java`);
-
-    // Read the original Java file contents
-    const fileData = await fs.promises.readFile(localFilePath, "utf8");
-
-    // Replace the class name with the sanitized job ID
-    const modifiedData = fileData.replace(
-      /public class \w+/,
-      `public class ${sanitizedJobId}`
-    );
-
-    // Write the modified data to a new Java file
-    await fs.promises.writeFile(newJavaFile, modifiedData, "utf8");
-
-    // Compile the Java file
-    await new Promise((resolve, reject) => {
-      exec(
-        `javac "${newJavaFile}"`,
-        { shell: "cmd.exe" },
-        (error, stdout, stderr) => {
-          if (error) {
-            reject({ error, stderr });
-          } else if (stderr) {
-            reject(stderr);
-          } else {
-            resolve(stdout);
-          }
-        }
-      );
-    });
-
-    // Read the input file contents
-    const inputData = await fs.promises.readFile(localInputPath, "utf8");
-
-    // Execute the compiled Java file
-    return new Promise((resolve, reject) => {
-      const runCommand = `java -cp "${dirPath}" "${sanitizedJobId}"`;
-      const process = exec(
-        runCommand,
-        { shell: "cmd.exe" },
-        (error, stdout, stderr) => {
-          if (error) {
-            reject({ error, stderr });
-          } else if (stderr) {
-            reject(stderr);
-          } else {
-            resolve(stdout);
-          }
-        }
-      );
-      process.stdin.end(inputData); // Pass the input data to the process stdin
-    });
-  } catch (error) {
-    throw error;
-  }
-};
-
-const validateJavaTestCases = async (filePath, inputpath, expectedOutputPath) => {
-  const localFilePath = await downloadCodeFromFirebase(filePath);
-  const localExpectedOutputPath = await downloadJavaOutputFromFirebase(
-    expectedOutputPath
-  );
-  const jobId = path.basename(localFilePath).split(".")[0];
+const executeJava = (filepath, inputPath) => {
+  const jobId = path.basename(filepath).split(".")[0];
   const sanitizedJobId = sanitizeJobId(jobId);
-  const dirPath = path.dirname(localFilePath);
+  const dirPath = path.dirname(filepath);
   const newJavaFile = path.join(dirPath, `${sanitizedJobId}.java`);
-  const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
-
-  // console.log({
-  //   jobId,
-  //   sanitizedJobId,
-  //   dirPath,
-  //   newJavaFile,
-  //   filePath,
-  //   inputpath,
-  //   expectedOutputPath,
-  //   codeOutputPath,
-  // });
 
   return new Promise((resolve, reject) => {
     // Read the original Java file contents
-    fs.readFile(localFilePath, "utf8", (err, fileData) => {
+    fs.readFile(filepath, "utf8", (err, fileData) => {
       if (err) {
         return reject({ error: err });
       }
@@ -139,43 +58,109 @@ const validateJavaTestCases = async (filePath, inputpath, expectedOutputPath) =>
               return;
             }
 
-            // Execute the compiled Java file with input redirection
-            const runCommand = `java "${newJavaFile}" < "${inputpath}" > "${codeOutputPath}"`;
-
-            exec(
-              runCommand,
-              { shell: "cmd.exe" },
-              async (error, stdout, stderr) => {
-                if (error) {
-                  return reject({ error, stderr });
-                } else if (stderr) {
-                  return reject(stderr);
-                }
-
-                try {
-                  // Read generated and expected output files
-                  const generatedOutput = await fs.promises.readFile(
-                    codeOutputPath,
-                    "utf8"
-                  );
-                  const expectedOutput = await fs.promises.readFile(
-                    localExpectedOutputPath,
-                    "utf8"
-                  );
-
-                  // Compare generated output with expected output
-                  if (generatedOutput.trim() === expectedOutput.trim()) {
-                    resolve("accepted");
-                  } else {
-                    resolve("failed");
-                  }
-                } catch (readError) {
-                  reject(readError);
-                }
+            // Read the input file contents
+            fs.readFile(inputPath, "utf8", (err, inputData) => {
+              if (err) {
+                return reject({ error: err });
               }
-            );
+
+              // Execute the compiled Java file
+              const runCommand = `java -cp "${dirPath}" "${sanitizedJobId}"`;
+
+              exec(
+                runCommand,
+                { shell: "cmd.exe" },
+                (error, stdout, stderr) => {
+                  if (error) {
+                    reject({ error, stderr });
+                    return;
+                  }
+                  if (stderr) {
+                    reject(stderr);
+                    return;
+                  }
+                  resolve(stdout);
+                }
+              ).stdin.end(inputData); // Pass the input data to the process stdin
+            });
           }
         );
+      });
+    });
+  });
+};
+
+const validateJavaTestCases = async (
+  filePath,
+  inputPath,
+  expectedOutputPath,
+  timelimit
+) => {
+  const localExpectedOutputPath = await downloadJavaOutputFromFirebase(
+    expectedOutputPath
+  );
+  const jobId = path.basename(filePath).split(".")[0];
+  const sanitizedJobId = sanitizeJobId(jobId);
+  const dirPath = path.dirname(filePath);
+  const newJavaFile = path.join(dirPath, `${sanitizedJobId}.java`);
+  const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
+
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, "utf8", (err, fileData) => {
+      if (err) {
+        return reject({ error: err });
+      }
+
+      const modifiedData = fileData.replace(
+        /public class \w+/,
+        `public class ${sanitizedJobId}`
+      );
+
+      fs.writeFile(newJavaFile, modifiedData, "utf8", (err) => {
+        if (err) {
+          return reject({ error: err });
+        }
+
+        const execCommand = exec(
+          `javac "${newJavaFile}" && java "${sanitizedJobId}" < "${inputPath}" > "${codeOutputPath}"`,
+          { shell: "cmd.exe", timeout: timelimit * 1000 },
+          async (error, stdout, stderr) => {
+            if (error) {
+              if (error.killed) {
+                return resolve("time limit exceeded");
+              }
+              reject({ error, stderr });
+              return;
+            }
+            if (stderr) {
+              reject(stderr);
+              return;
+            }
+
+            try {
+              const generatedOutput = await fs.promises.readFile(
+                codeOutputPath,
+                "utf8"
+              );
+              const expectedOutput = await fs.promises.readFile(
+                localExpectedOutputPath,
+                "utf8"
+              );
+
+              if (generatedOutput.trim() === expectedOutput.trim()) {
+                resolve("accepted");
+              } else {
+                resolve("failed");
+              }
+            } catch (readError) {
+              reject(readError);
+            }
+          }
+        );
+
+        setTimeout(() => {
+          execCommand.kill();
+        }, timelimit * 1000);
       });
     });
   });

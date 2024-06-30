@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Pane } from "split-pane-react";
 import axios from "axios";
 import { url } from "../../config";
+import { useGlobalContext } from "../../context";
 
 const CODE_SNIPPETS = {
   cpp: "#include<bits/stdc++.h>\nusing namespace std;\n\nint main() {\n\t// code\n\treturn 0;\n}",
@@ -24,6 +25,7 @@ const CodingEditor = ({ problem }) => {
   const [output, setOutput] = useState("");
   const [language, setLanguage] = useState("cpp");
   const [loading, setLoading] = useState(false);
+  const { user } = useGlobalContext();
 
   const handleRunCode = async () => {
     setLoading(true);
@@ -42,16 +44,21 @@ const CodingEditor = ({ problem }) => {
       setLoading(false);
       setOutput(data.output);
     } catch (error) {
-      console.log(error.response.data.error.stderr);
+      console.log(error);
       setLoading(false);
-      setOutput(error.response.data.error.stderr);
+      setOutput(error.response.data.stderr);
     }
   };
 
   const handleSubmitCode = async () => {
     setLoading(true);
     setOutput("Submitting...");
-    const payload = { language, code, problemId: problem[0]._id };
+    const payload = {
+      language,
+      code,
+      problemId: problem[0]._id,
+      userId: user.userId,
+    };
     try {
       const { data } = await axios.post(`${url}/api/v1/code/submit`, payload, {
         withCredentials: true,
@@ -62,7 +69,7 @@ const CodingEditor = ({ problem }) => {
     } catch (error) {
       console.log(error);
       setLoading(false);
-      setOutput(error.response.data.error.stderr);
+      setOutput(error.response.data.stderr);
     }
     setInput("");
   };
@@ -129,14 +136,16 @@ const CodingEditor = ({ problem }) => {
                   className="w-full mb-2 flex-1"
                   placeholder="Output"
                   value={`${
-                    output === "accepted" || output === "failed"
+                    output === "accepted" ||
+                    output === "failed" ||
+                    output === "time limit exceeded"
                       ? output.toUpperCase()
                       : output
                   }`}
                   color={
                     output === "accepted"
                       ? "success"
-                      : output === "failed"
+                      : output === "failed" || output === "time limit exceeded"
                       ? "danger"
                       : "default"
                   }

@@ -1,11 +1,12 @@
-const { exec } = require("child_process");
-const fs = require("fs");
-const path = require("path");
 const {
   downloadCodeFromFirebase,
   downloadInputFromFirebase,
   downloadPythonOutputFromFirebase,
 } = require("./firebase/downloadFileFromFirebase");
+
+const { exec } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
 const outputPath = path.join(__dirname, "outputs");
 
@@ -13,71 +14,55 @@ if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
-const executePython = async (filepath, inputPath) => {
-  try {
-    const localFilePath = await downloadCodeFromFirebase(filepath);
-    const localInputPath = await downloadInputFromFirebase(inputPath);
+const executePython = (filepath, inputPath) => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(inputPath, "utf8", (err, inputData) => {
+      if (err) {
+        return reject({ error: err });
+      }
 
-    return new Promise((resolve, reject) => {
-      fs.readFile(localInputPath, "utf8", (err, inputData) => {
-        if (err) {
-          return reject({ error: err });
+      // execute python command
+      const command = `python "${filepath}"`;
+
+      exec(command, { shell: "cmd.exe" }, (error, stdout, stderr) => {
+        if (error) {
+          reject({ error, stderr });
+          return;
         }
-
-        // Execute Python command
-        const command = `python "${localFilePath}"`;
-
-        const process = exec(
-          command,
-          { shell: "cmd.exe" },
-          (error, stdout, stderr) => {
-            if (error) {
-              reject({ error, stderr });
-            } else if (stderr) {
-              reject(stderr);
-            } else {
-              resolve(stdout);
-            }
-          }
-        );
-
-        process.stdin.end(inputData); // Pass the input data to the process stdin
-      });
+        if (stderr) {
+          reject(stderr);
+          return;
+        }
+        resolve(stdout);
+      }).stdin.end(inputData);
     });
-  } catch (error) {
-    throw error;
-  }
+  });
 };
 
 const validatePythonTestCases = async (
   filePath,
   inputPath,
-  expectedOutputPath
+  expectedOutputPath,
+  timelimit
 ) => {
-  const localFilePath = await downloadCodeFromFirebase(filePath);
   const localExpectedOutputPath = await downloadPythonOutputFromFirebase(
     expectedOutputPath
   );
-  const jobId = path.basename(localFilePath).split(".")[0];
+  const jobId = path.basename(filePath).split(".")[0];
   const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
 
-  // console.log({
-  //   jobId,
-  //   codeOutputPath,
-  //   filePath,
-  //   inputPath,
-  //   expectedOutputPath,
-  // });
-
   return new Promise((resolve, reject) => {
-    exec(
-      `python "${localFilePath}" < "${inputPath}" > "${codeOutputPath}"`,
-      { shell: "cmd.exe" },
+    const execCommand = exec(
+      `python "${filePath}" < "${inputPath}" > "${codeOutputPath}"`,
+      { shell: "cmd.exe", timeout: timelimit * 1000 },
       async (error, stdout, stderr) => {
         if (error) {
-          return reject({ error, stderr });
+          if (error.killed) {
+            return resolve("time limit exceeded");
+          }
+          return reject({ error: error.message, stderr });
         } else if (stderr) {
-          return reject(stderr);
+          return reject({ stderr });
         }
 
         try {
@@ -100,6 +85,10 @@ const validatePythonTestCases = async (
         }
       }
     );
+
+    setTimeout(() => {
+      execCommand.kill();
+    }, timelimit * 1000);
   });
 };
 
