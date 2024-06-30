@@ -1,26 +1,6 @@
 const path = require("path");
 const bucket = require("./bucket");
 
-const downloadCodeFromFirebase = async (firebaseUrl) => {
-  const filename = path.basename(firebaseUrl);
-  const tempFilePath = path.join(__dirname, "../codes/", filename);
-
-  const file = bucket.file(`codes/${filename}`);
-  await file.download({ destination: tempFilePath });
-
-  return tempFilePath;
-};
-
-const downloadInputFromFirebase = async (firebaseUrl) => {
-  const filename = path.basename(firebaseUrl);
-  const tempFilePath = path.join(__dirname, "../inputs/", filename);
-
-  const file = bucket.file(`inputs/${filename}`);
-  await file.download({ destination: tempFilePath });
-
-  return tempFilePath;
-};
-
 const downloadTestInputsFromFirebase = async (firebaseUrl) => {
   const filename = path.basename(firebaseUrl);
   const tempFilePath = path.join(__dirname, "../testinputs/", filename);
@@ -62,8 +42,6 @@ const downloadPythonOutputFromFirebase = async (firebaseUrl) => {
 };
 
 module.exports = {
-  downloadCodeFromFirebase,
-  downloadInputFromFirebase,
   downloadJavaOutputFromFirebase,
   downloadPythonOutputFromFirebase,
   downloadCppOutputFromFirebase,

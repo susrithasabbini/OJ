@@ -87,6 +87,10 @@ const EditProfileComponent = ({ isOwner, paramsUser }) => {
 
   useEffect(() => {}, [isOwner, paramsUser]);
 
+  if (isLoading) {
+    return <div className="text-center my-40 text-2xl">Loading...</div>;
+  }
+
   return (
     <div className="px-5 rounded-xl flex flex-1 justify-center h-fit py-10 shadow-md">
       <div className="w-full flex flex-col gap-y-3 items-center">

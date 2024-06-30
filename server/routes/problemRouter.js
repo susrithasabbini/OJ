@@ -5,7 +5,7 @@ const {
   editProblem,
   deleteProblem,
   getProblemBySlug,
-} = require("../controllers/problemsController");
+} = require("../controllers/problemController");
 const {
   authenticateUser,
   authorizePermissions,

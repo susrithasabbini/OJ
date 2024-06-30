@@ -6,7 +6,6 @@ const { executePython, validatePythonTestCases } = require("../executePy");
 const Problem = require("../models/Problem");
 const { StatusCodes } = require("http-status-codes");
 const {
-  downloadInputFromFirebase,
   downloadTestInputsFromFirebase,
 } = require("../firebase/downloadFileFromFirebase");
 const Submission = require("../models/Submission");
@@ -86,7 +85,10 @@ const submitCode = async (req, res) => {
 
     await submission.save();
 
-    console.log(output);
+    if (output === "accepted") {
+      // mark user as solved that problem
+      problem.solvedBy.push(userId);
+    }
 
     res.json({ filepath, inputPath, output });
   } catch (err) {
