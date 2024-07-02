@@ -9,6 +9,7 @@ const {
   downloadTestInputsFromFirebase,
 } = require("../firebase/downloadFileFromFirebase");
 const Submission = require("../models/Submission");
+const Contest = require("../models/Contest");
 
 const runCode = async (req, res) => {
   const { language = "cpp", code, input } = req.body;
@@ -32,7 +33,7 @@ const runCode = async (req, res) => {
 };
 
 const submitCode = async (req, res) => {
-  let { language, code, problemId, userId } = req.body;
+  let { language, code, problemId, userId, contestId } = req.body;
 
   if (code === undefined || !code) {
     return res.status(400).json({ error: "Empty code body!" });
@@ -43,55 +44,94 @@ const submitCode = async (req, res) => {
     const filepath = await generateFile(language, code);
     let output;
 
+    // Fetch the problem details
     const problem = await Problem.findById(problemId);
-    if (!problem)
+    if (!problem) {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ message: "No problem found!" });
+    }
 
     const timelimit = problem.timelimit; // Get the time limit from the problem
     const expectedOutputPath = problem.output;
     const inputPath = await downloadTestInputsFromFirebase(problem.input);
 
-    if (language === "cpp")
+    // Validate code based on the language
+    if (language === "cpp") {
       output = await validateCppTestCases(
         filepath,
         inputPath,
         expectedOutputPath[0].cpp,
         timelimit
       );
-    else if (language === "java")
+    } else if (language === "java") {
       output = await validateJavaTestCases(
         filepath,
         inputPath,
         expectedOutputPath[0].java,
         timelimit
       );
-    else if (language === "python")
+    } else if (language === "python") {
       output = await validatePythonTestCases(
         filepath,
         inputPath,
         expectedOutputPath[0].python,
         timelimit
       );
+    }
 
+    // Save the submission
     const submission = new Submission({
       code,
       language,
       output,
       problemId,
       userId,
+      contestId: contestId || "", // Handle undefined contestId
     });
-
     await submission.save();
 
     if (output === "accepted") {
-      // mark user as solved that problem
-      problem.solvedBy.push(userId);
+      // Mark user as solved that problem
+      if (!problem.solvedBy.includes(userId)) {
+        problem.solvedBy.push(userId);
+        await problem.save(); // Save the updated problem
+      }
+    }
+
+    // Update the contest if contestId is provided
+    if (contestId) {
+      const contest = await Contest.findById(contestId);
+      if (!contest) {
+        return res
+          .status(StatusCodes.NOT_FOUND)
+          .json({ message: "No contest found!" });
+      }
+
+      // Find the problem in the contest and update its solvedBy
+      const contestProblem = contest.problems.find(
+        (p) => p.problemId === problemId
+      );
+      if (contestProblem) {
+        if (
+          !contestProblem.solvedBy.includes(userId) &&
+          output === "accepted"
+        ) {
+          contestProblem.solvedBy.push(userId);
+          await contest.save(); // Save the updated contest
+        }
+      } else {
+        return res
+          .status(StatusCodes.NOT_FOUND)
+          .json({ message: "Problem not found in contest!" });
+      }
     }
 
     res.json({ filepath, inputPath, output });
   } catch (err) {
+    console.error("Error during code submission:", err);
+
+    // Save a failed submission
     const submission = new Submission({
       userId,
       problemId,
@@ -99,9 +139,9 @@ const submitCode = async (req, res) => {
       code,
       output: "failed",
     });
-
     await submission.save();
-    return res.status(500).json(err);
+
+    return res.status(500).json({ stderr: err });
   }
 };
 

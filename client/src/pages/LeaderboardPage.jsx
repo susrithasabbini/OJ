@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   Table,
@@ -11,34 +11,35 @@ import {
 } from "@nextui-org/react";
 import { Crown } from "lucide-react";
 import { useGlobalContext } from "../context";
+import axios from "axios";
+import { url } from "../config";
+import { toast } from "sonner";
 
 const LeaderboardPage = () => {
   const { user } = useGlobalContext();
 
-  const [users] = useState([
-    {
-      id: 1,
-      username: "susritha",
-      email: "sabbinisusritha@gmail.com",
-      points: 1500,
-    },
-    { id: 2, username: "Jane Smith", points: 1400 },
-    { id: 3, username: "Sam Johnson", points: 1350 },
-    { id: 4, username: "Alice Brown", points: 1300 },
-    { id: 5, username: "Charlie Wilson", points: 1250 },
-    { id: 6, username: "Emily Davis", points: 1200 },
-    { id: 7, username: "Daniel Moore", points: 1150 },
-    { id: 8, username: "Sophia Taylor", points: 1100 },
-    { id: 9, username: "Michael Anderson", points: 1050 },
-    { id: 10, username: "Laura Thompson", points: 1000 },
-    { id: 11, username: "Chris Lee", points: 950 },
-    { id: 12, username: "Grace Harris", points: 900 },
-    { id: 13, username: "John Doe", points: 800 },
-  ]);
+  const [users, setUsers] = useState([]);
 
-  const loggedInUser = users.find((u) => u.username === user.username);
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const response = await axios.get(`${url}/api/v1/contests/leaderboard`, {
+          withCredentials: true,
+        });
+
+        console.log(response);
+        setUsers(response.data.leaderboard);
+      } catch (error) {
+        toast.error("Failed to fetch leaderboard");
+        console.error("Failed to fetch leaderboard:", error);
+      }
+    };
+    fetchLeaderboard();
+  }, []);
+
+  const loggedInUser = users?.find((u) => u.username === user.username);
   const loggedInUserRank =
-    users.findIndex((u) => u.username === user.username) + 1;
+    users?.findIndex((u) => u.username === user.username) + 1;
 
   return (
     <div className="p-6 h-fit w-full">
@@ -47,8 +48,8 @@ const LeaderboardPage = () => {
       <Card className="mb-8 p-6 bg-gradient-to-r from-blue-500 to-blue-300 text-white shadow-lg flex items-center">
         <div className="flex flex-col items-center justify-center border-4 w-fit p-6 border-yellow-500 rounded-3xl">
           <Crown size={48} className="mb-4" color="#eab308" />
-          <h2 className="text-2xl font-bold mb-2">{users[0].username}</h2>
-          <p className="text-lg mb-4">{users[0].email}</p>
+          <h2 className="text-2xl font-bold mb-2">{users[0]?.username}</h2>
+          <p className="text-lg mb-4">{users[0]?.email}</p>
         </div>
       </Card>
 
@@ -66,16 +67,16 @@ const LeaderboardPage = () => {
                   {loggedInUserRank}
                 </TableCell>
                 <TableCell className="py-2 px-4 border-b border-gray-200 font-semibold">
-                  {loggedInUser.username}
+                  {loggedInUser?.username}
                 </TableCell>
                 <TableCell className="py-2 px-4 border-b border-gray-200 font-semibold">
-                  {loggedInUser.points}
+                  {loggedInUser?.points}
                 </TableCell>
               </TableRow>
             )}
-            {users.map((u, index) => (
+            {users?.map((u, index) => (
               <TableRow
-                key={u.id}
+                key={u.userId}
                 className={`${
                   u.username === user.username
                     ? "bg-yellow-100/60"

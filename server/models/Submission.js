@@ -10,6 +10,9 @@ const SubmissionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    contestId: {
+      type: String,
+    },
     language: {
       type: String,
       required: true,

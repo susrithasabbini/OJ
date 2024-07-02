@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-
 import {
   ArrowUp,
   CirclePlus,
@@ -10,6 +9,7 @@ import {
   ListTodo,
   LogOut,
   User,
+  Trophy,
 } from "lucide-react";
 import MenuLink from "./MenuLink";
 import { useGlobalContext } from "../../context";
@@ -24,9 +24,14 @@ const AdminSidebar = () => {
   };
 
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isContestMenuOpen, setContestMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setMenuOpen(!isMenuOpen);
+  };
+
+  const toggleContestMenu = () => {
+    setContestMenuOpen(!isContestMenuOpen);
   };
 
   return (
@@ -83,30 +88,77 @@ const AdminSidebar = () => {
         </div>
 
         {isMenuOpen && (
-          <>
-            <div className="ml-8 transition duration-300 transform">
+          <div className="ml-8 transition duration-300 transform">
+            <MenuLink
+              isMenuOpen={isLinkActive("/admin/problems")}
+              to="problems"
+              icon={<ListTodo size={20} />}
+              text="Problems List"
+            />
+            <MenuLink
+              to="add-problem"
+              isMenuOpen={isLinkActive("/admin/add-problem")}
+              icon={<CirclePlus size={20} />}
+              text="Add Problem"
+            />
+            {isLinkActive("/admin/add-problem") && (
               <MenuLink
-                isMenuOpen={isLinkActive("/admin/problems")}
-                to="problems"
-                icon={<ListTodo size={20} />}
-                text="Problems List"
+                to="edit-problem"
+                isMenuOpen={isLinkActive("/admin/edit-problem")}
+                icon={<Edit size={20} />}
+                text="Edit Problem"
               />
+            )}
+          </div>
+        )}
+
+        <div onClick={toggleContestMenu}>
+          <div
+            className={`${
+              isContestMenuOpen ? "text-gray-500 bg-gray-50" : "text-gray-500"
+            } hover:bg-gray-100 w-full px-4 transition-colors duration-300 hover:opacity-80 flex items-center gap-x-4 py-[10px] rounded-md cursor-pointer`}
+          >
+            <Trophy size={24} />
+            <span className="text-base">Contests</span>
+            {isContestMenuOpen ? (
+              <ArrowUp
+                className="ml-auto text-lg transition duration-300"
+                color={isContestMenuOpen ? "#3b82f6" : "#9ca3af"}
+                size={20}
+              />
+            ) : (
+              <ArrowUp
+                color={isContestMenuOpen ? "#3b82f6" : "#9ca3af"}
+                size={20}
+                className="ml-auto text-lg transform rotate-180 transition duration-300"
+              />
+            )}
+          </div>
+        </div>
+
+        {isContestMenuOpen && (
+          <div className="ml-8 transition duration-300 transform">
+            <MenuLink
+              isMenuOpen={isLinkActive("/admin/contests")}
+              to="contests"
+              icon={<ListTodo size={20} />}
+              text="Contests List"
+            />
+            <MenuLink
+              to="add-contest"
+              isMenuOpen={isLinkActive("/admin/add-contest")}
+              icon={<CirclePlus size={20} />}
+              text="Add Contest"
+            />
+            {isLinkActive("/admin/add-contest") && (
               <MenuLink
-                to="add-problem"
-                isMenuOpen={isLinkActive("/admin/add-problem")}
-                icon={<CirclePlus size={20} />}
-                text="Add Problem"
+                to="edit-contest"
+                isMenuOpen={isLinkActive("/admin/edit-contest")}
+                icon={<Edit size={20} />}
+                text="Edit Contest"
               />
-              {isLinkActive("/admin/add-problem") && (
-                <MenuLink
-                  to="edit-problem"
-                  isMenuOpen={isLinkActive("/admin/edit-problem")}
-                  icon={<Edit size={20} />}
-                  text="Edit Problem"
-                />
-              )}
-            </div>
-          </>
+            )}
+          </div>
         )}
       </div>
 
@@ -226,6 +278,51 @@ const AdminSidebar = () => {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Contest section for medium and smaller devices */}
+      <div className="lg:hidden bg-white shadow-md fixed bottom-0 left-0 right-0 z-50">
+        <div className="flex justify-around py-2">
+          <div
+            className="flex flex-col items-center justify-center text-xs group"
+            onClick={toggleContestMenu}
+          >
+            <Trophy size={24} />
+            <span className="group-hover:text-blue-500">Contests</span>
+            <ArrowUp
+              className={`mt-1 ${
+                isContestMenuOpen ? "transform rotate-180" : ""
+              }`}
+              color={isContestMenuOpen ? "#3b82f6" : "#9ca3af"}
+              size={20}
+            />
+          </div>
+        </div>
+
+        {isContestMenuOpen && (
+          <div className="bg-white py-2">
+            <MenuLink
+              to="/admin/contests"
+              icon={<ListTodo size={20} />}
+              text="Contests List"
+              active={isLinkActive("/admin/contests")}
+            />
+            <MenuLink
+              to="/admin/add-contest"
+              icon={<CirclePlus size={20} />}
+              text="Add Contest"
+              active={isLinkActive("/admin/add-contest")}
+            />
+            {isLinkActive("/admin/add-contest") && (
+              <MenuLink
+                to="/admin/edit-contest"
+                icon={<Edit size={20} />}
+                text="Edit Contest"
+                active={isLinkActive("/admin/edit-contest")}
+              />
+            )}
+          </div>
+        )}
       </div>
     </>
   );

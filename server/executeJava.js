@@ -1,6 +1,4 @@
 const {
-  downloadCodeFromFirebase,
-  downloadInputFromFirebase,
   downloadJavaOutputFromFirebase,
 } = require("./firebase/downloadFileFromFirebase");
 
@@ -44,11 +42,16 @@ const executeJava = (filepath, inputPath) => {
           return reject({ error: err });
         }
 
-        // Compile the Java file
-        exec(
-          `javac "${newJavaFile}"`,
-          { shell: "cmd.exe" },
-          (error, stdout, stderr) => {
+        // Read the input file contents
+        fs.readFile(inputPath, "utf8", (err, inputData) => {
+          if (err) {
+            return reject({ error: err });
+          }
+
+          // Execute the compiled Java file
+          const runCommand = `java "${newJavaFile}"`;
+
+          exec(runCommand, { shell: "cmd.exe" }, (error, stdout, stderr) => {
             if (error) {
               reject({ error, stderr });
               return;
@@ -57,34 +60,9 @@ const executeJava = (filepath, inputPath) => {
               reject(stderr);
               return;
             }
-
-            // Read the input file contents
-            fs.readFile(inputPath, "utf8", (err, inputData) => {
-              if (err) {
-                return reject({ error: err });
-              }
-
-              // Execute the compiled Java file
-              const runCommand = `java -cp "${dirPath}" "${sanitizedJobId}"`;
-
-              exec(
-                runCommand,
-                { shell: "cmd.exe" },
-                (error, stdout, stderr) => {
-                  if (error) {
-                    reject({ error, stderr });
-                    return;
-                  }
-                  if (stderr) {
-                    reject(stderr);
-                    return;
-                  }
-                  resolve(stdout);
-                }
-              ).stdin.end(inputData); // Pass the input data to the process stdin
-            });
-          }
-        );
+            resolve(stdout);
+          }).stdin.end(inputData); // Pass the input data to the process stdin
+        });
       });
     });
   });
@@ -122,18 +100,18 @@ const validateJavaTestCases = async (
         }
 
         const execCommand = exec(
-          `javac "${newJavaFile}" && java "${sanitizedJobId}" < "${inputPath}" > "${codeOutputPath}"`,
+          `java "${newJavaFile}" < "${inputPath}" > "${codeOutputPath}"`,
           { shell: "cmd.exe", timeout: timelimit * 1000 },
           async (error, stdout, stderr) => {
+            if (stderr) {
+              reject(stderr);
+              return;
+            }
             if (error) {
               if (error.killed) {
                 return resolve("time limit exceeded");
               }
               reject({ error, stderr });
-              return;
-            }
-            if (stderr) {
-              reject(stderr);
               return;
             }
 

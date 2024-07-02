@@ -65,13 +65,13 @@ const validateCppTestCases = async (
       `g++ "${filePath}" -o "${outPath}" && "${outPath}" < "${inputPath}" > "${codeOutputPath}"`,
       { shell: "cmd.exe", timeout: timelimit * 1000 },
       async (error, stdout, stderr) => {
-        if (error) {
+        if (stderr) {
+          return reject(stderr);
+        } else if (error) {
           if (error.killed) {
             return resolve("time limit exceeded");
           }
           return reject({ error, stderr });
-        } else if (stderr) {
-          return reject(stderr);
         }
 
         try {

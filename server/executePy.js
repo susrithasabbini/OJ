@@ -56,13 +56,13 @@ const validatePythonTestCases = async (
       `python "${filePath}" < "${inputPath}" > "${codeOutputPath}"`,
       { shell: "cmd.exe", timeout: timelimit * 1000 },
       async (error, stdout, stderr) => {
-        if (error) {
+        if (stderr) {
+          return reject({ stderr });
+        } else if (error) {
           if (error.killed) {
             return resolve("time limit exceeded");
           }
           return reject({ error: error.message, stderr });
-        } else if (stderr) {
-          return reject({ stderr });
         }
 
         try {

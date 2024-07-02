@@ -12,6 +12,8 @@ import { Pane } from "split-pane-react";
 import axios from "axios";
 import { url } from "../../config";
 import { useGlobalContext } from "../../context";
+import { toast } from "sonner";
+import { useParams } from "react-router-dom";
 
 const CODE_SNIPPETS = {
   cpp: "#include<bits/stdc++.h>\nusing namespace std;\n\nint main() {\n\t// code\n\treturn 0;\n}",
@@ -26,8 +28,13 @@ const CodingEditor = ({ problem }) => {
   const [language, setLanguage] = useState("cpp");
   const [loading, setLoading] = useState(false);
   const { user } = useGlobalContext();
+  const { contestId } = useParams();
 
   const handleRunCode = async () => {
+    if (!user) {
+      toast.warning("Please Login!");
+      return;
+    }
     setLoading(true);
     setOutput("Running...");
     const payload = {
@@ -51,6 +58,10 @@ const CodingEditor = ({ problem }) => {
   };
 
   const handleSubmitCode = async () => {
+    if (!user) {
+      toast.warning("Please Login!");
+      return;
+    }
     setLoading(true);
     setOutput("Submitting...");
     const payload = {
@@ -58,6 +69,7 @@ const CodingEditor = ({ problem }) => {
       code,
       problemId: problem[0]._id,
       userId: user.userId,
+      contestId,
     };
     try {
       const { data } = await axios.post(`${url}/api/v1/code/submit`, payload, {
@@ -65,7 +77,7 @@ const CodingEditor = ({ problem }) => {
       });
       console.log(data);
       setLoading(false);
-      setOutput(data.output);
+      if (data.output) setOutput(data.output) || "";
     } catch (error) {
       console.log(error);
       setLoading(false);

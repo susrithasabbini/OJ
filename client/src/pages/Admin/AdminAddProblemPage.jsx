@@ -1,13 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import {
-  Input,
-  Button,
-  Card,
-  Textarea,
-  RadioGroup,
-  Radio,
-} from "@nextui-org/react";
+import { Input, Button, Textarea, RadioGroup, Radio } from "@nextui-org/react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { url } from "../../config";
@@ -140,7 +133,7 @@ const AdminAddProblemPage = () => {
     <div className="p-6 h-fit w-full">
       <h1 className="text-2xl font-bold mb-4">Add New Problem</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card className="p-6 space-y-4">
+        <div className="p-6 space-y-4">
           <h2 className="text-xl font-semibold">Problem Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
@@ -250,9 +243,9 @@ const AdminAddProblemPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-6 space-y-4">
+        <div className="p-6 space-y-4">
           <h2 className="text-xl font-semibold">Sample Test Cases</h2>
           {testCases.map((testCase, index) => (
             <div key={index} className="space-y-2">
@@ -321,9 +314,9 @@ const AdminAddProblemPage = () => {
           <Button onClick={handleAddTestCase} variant="flat" color="primary">
             Add Sample Test Case
           </Button>
-        </Card>
+        </div>
 
-        <Card className="p-6 space-y-4">
+        <div className="p-6 space-y-4">
           <h2 className="text-xl font-semibold">Tags</h2>
           {tags.map((tag, index) => (
             <div key={index} className="flex items-center space-x-4">
@@ -351,7 +344,7 @@ const AdminAddProblemPage = () => {
           <Button variant="flat" color="primary" onClick={handleAddTag}>
             Add Tag
           </Button>
-        </Card>
+        </div>
 
         <Button type="submit" color="primary" auto>
           Submit

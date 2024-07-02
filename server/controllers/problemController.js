@@ -1,5 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const Problem = require("../models/Problem");
+const User = require("../models/User");
 const { saveFileToFirebase } = require("../firebase/saveFileToFirebase");
 
 const getAllProblems = async (req, res) => {
@@ -237,11 +238,142 @@ const deleteProblem = async (req, res) => {
   }
 };
 
+const getLeaderboard = async (req, res) => {
+  try {
+    // Retrieve all problems and count how many unique users solved each problem
+    const problems = await Problem.find({}, "solvedBy");
+
+    // Create a map to count the number of unique problems solved by each user
+    const userProblemCounts = {};
+
+    // Iterate through all problems and update the count for each user
+    problems.forEach((problem) => {
+      problem.solvedBy.forEach((userId) => {
+        if (userProblemCounts[userId]) {
+          userProblemCounts[userId]++;
+        } else {
+          userProblemCounts[userId] = 1;
+        }
+      });
+    });
+
+    // Convert the userProblemCounts map into an array for further processing
+    const userProblemCountsArray = Object.entries(userProblemCounts).map(
+      ([userId, solvedProblems]) => ({
+        userId,
+        solvedProblems,
+      })
+    );
+
+    // Sort users by the number of solved problems in descending order
+    userProblemCountsArray.sort((a, b) => b.solvedProblems - a.solvedProblems);
+
+    // Get usernames for each userId
+    const userIds = userProblemCountsArray.map((u) => u.userId);
+    const users = await User.find({ _id: { $in: userIds } });
+
+    // Format the data
+    const positions = userProblemCountsArray.map((userCount, index) => {
+      const user = users.find(
+        (u) => u._id.toString() === userCount.userId.toString()
+      );
+      return {
+        username: user ? user.username : "Unknown",
+        rank: index + 1,
+        solvedProblems: userCount.solvedProblems,
+      };
+    });
+
+    res.status(200).json({ positions });
+  } catch (error) {
+    console.error("Error fetching leaderboard:", error);
+    res.status(500).json({ error: "Failed to fetch leaderboard" });
+  }
+};
+
+const getSolvedProblems = async (req, res) => {
+  try {
+    const { userId } = req.params; // Assuming user ID is available in req.user.id
+
+    // Fetch all problems from the database
+    const problems = await Problem.find();
+
+    // Group problems by difficulty
+    const problemsByDifficulty = problems.reduce((acc, problem) => {
+      if (!acc[problem.difficulty]) {
+        acc[problem.difficulty] = [];
+      }
+      acc[problem.difficulty].push(problem);
+      return acc;
+    }, {});
+
+    // Initialize the result array
+    const result = [];
+
+    // Total problems and solved problems counters
+    let totalProblems = 0;
+    let totalSolvedProblems = 0;
+
+    // Function to calculate statistics for a given difficulty
+    const calculateStatistics = (difficulty) => {
+      const problemsCount = problemsByDifficulty[difficulty]?.length || 0;
+      totalProblems += problemsCount;
+
+      // Count the number of solved problems for the user at this difficulty level
+      const solvedProblems =
+        problemsByDifficulty[difficulty]?.filter((problem) =>
+          problem.solvedBy.includes(userId)
+        ).length || 0;
+      totalSolvedProblems += solvedProblems;
+
+      // Calculate the percentage of solved problems
+      const percentageSolved = problemsCount
+        ? Math.round((solvedProblems / problemsCount) * 100)
+        : 0;
+
+      return {
+        difficulty,
+        problemsCount,
+        solvedProblems,
+        percentageSolved,
+      };
+    };
+
+    // Calculate statistics for each difficulty in the required order
+    const difficulties = ["Easy", "Medium", "Hard"];
+    for (const difficulty of difficulties) {
+      const stats = calculateStatistics(difficulty);
+      result.push(stats);
+    }
+
+    // Calculate the total percentage of solved problems
+    const totalPercentageSolved = totalProblems
+      ? Math.round((totalSolvedProblems / totalProblems) * 100)
+      : 0;
+
+    // Add the total data to the result array
+    result.push({
+      totalPercentageSolved,
+      totalProblems,
+      totalSolvedProblems,
+    });
+
+    return res.status(StatusCodes.OK).json({ statistics: result });
+  } catch (error) {
+    console.error("Error:", error);
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+};
+
 module.exports = {
+  getLeaderboard,
   getAllProblems,
   createProblem,
   getProblemBySlug,
   getProblemById,
   editProblem,
   deleteProblem,
+  getSolvedProblems,
 };

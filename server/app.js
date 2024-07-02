@@ -19,6 +19,7 @@ const userRouter = require("./routes/userRouter");
 const codeRouter = require("./routes/codeRouter");
 const problemRouter = require("./routes/problemRouter");
 const submissionRouter = require("./routes/submissionRouter");
+const contestRouter = require("./routes/contestRouter");
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/code", codeRouter);
 app.use("/api/v1/problems", problemRouter);
 app.use("/api/v1/submissions", submissionRouter);
+app.use("/api/v1/contests", contestRouter);
 
 // error middleware
 app.use(notFound);

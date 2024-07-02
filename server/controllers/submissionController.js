@@ -66,8 +66,23 @@ const deleteSubmission = async (req, res) => {
 
 const getUserSubmissions = async (req, res) => {
   const userId = req.params.userId;
+
+  // Get the current year
+  const currentYear = new Date().getFullYear();
+
+  // Define the start and end of the current year
+  const startOfYear = new Date(`${currentYear}-01-01T00:00:00.000Z`);
+  const endOfYear = new Date(`${currentYear + 1}-01-01T00:00:00.000Z`);
+
   try {
-    const submissions = await Submission.find({ userId }, "createdAt");
+    const submissions = await Submission.find(
+      {
+        userId,
+        createdAt: { $gte: startOfYear, $lt: endOfYear },
+      },
+      "createdAt"
+    );
+
     res.status(StatusCodes.OK).json({ submissions });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error });
