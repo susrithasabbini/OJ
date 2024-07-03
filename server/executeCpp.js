@@ -1,5 +1,4 @@
 const {
-  downloadCodeFromFirebase,
   downloadCppOutputFromFirebase,
 } = require("./firebase/downloadFileFromFirebase");
 
@@ -13,33 +12,43 @@ if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
-const executeCpp = (filepath, inputPath) => {
+const executeCpp = (filepath, inputPath, timelimit) => {
   const jobId = path.basename(filepath).split(".")[0];
   const outPath = path.join(path.dirname(filepath), `${jobId}.exe`);
 
   return new Promise((resolve, reject) => {
+    // Compile the C++ code
     exec(
       `g++ "${filepath}" -o "${outPath}"`,
       { shell: "cmd.exe" },
-      (error, stdout, stderr) => {
-        if (error) {
-          reject({ error: error.message, stderr });
+      (compileError, stdout, stderr) => {
+        if (compileError) {
+          return reject({ error: compileError.message, stderr });
         } else if (stderr) {
-          reject({ stderr });
+          return reject({ stderr });
         } else {
-          exec(
+          // Execute the compiled executable with time limit
+          const execCommand = exec(
             `"${outPath}" < "${inputPath}"`,
-            { shell: "cmd.exe" },
-            (error, stdout, stderr) => {
-              if (error) {
-                reject({ error: error.message, stderr });
-              } else if (stderr) {
-                reject({ stderr });
+            { shell: "cmd.exe", timeout: timelimit * 1000 },
+            (execError, execStdout, execStderr) => {
+              if (execStderr) {
+                return reject({ stderr: execStderr });
+              } else if (execError) {
+                if (execError.killed) {
+                  return resolve("time limit exceeded");
+                }
+                return reject({ error: execError.message, stderr: execStderr });
               } else {
-                resolve(stdout);
+                return resolve(execStdout);
               }
             }
           );
+
+          // Kill the process if it exceeds the time limit
+          setTimeout(() => {
+            execCommand.kill();
+          }, timelimit * 1000);
         }
       }
     );

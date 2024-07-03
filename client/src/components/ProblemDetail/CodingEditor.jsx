@@ -15,14 +15,8 @@ import { useGlobalContext } from "../../context";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 
-const CODE_SNIPPETS = {
-  cpp: "#include<bits/stdc++.h>\nusing namespace std;\n\nint main() {\n\t// code\n\treturn 0;\n}",
-  python: "# code",
-  java: "public class Main {\n\tpublic static void main(String[] args) {\n\t\t//code\n\t}\n}",
-};
-
 const CodingEditor = ({ problem }) => {
-  const [code, setCode] = useState(CODE_SNIPPETS["cpp"]);
+  const [code, setCode] = useState(problem[0]?.codeStubs?.[0]?.cpp || "");
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [language, setLanguage] = useState("cpp");
@@ -90,7 +84,7 @@ const CodingEditor = ({ problem }) => {
     setLanguage(e.target.value);
     setInput("");
     setOutput("");
-    setCode(CODE_SNIPPETS[e.target.value]);
+    setCode(problem[0].codeStubs[0][e.target.value]);
   };
 
   return (

@@ -19,12 +19,14 @@ const runCode = async (req, res) => {
   try {
     const filePath = await generateFile(language, code);
     const inputPath = await generateInputFile(input);
+    const timelimit = 5; // Set the timelimit for running (s)
     let output;
-    if (language === "cpp") output = await executeCpp(filePath, inputPath);
+    if (language === "cpp")
+      output = await executeCpp(filePath, inputPath, timelimit);
     else if (language === "java")
-      output = await executeJava(filePath, inputPath);
+      output = await executeJava(filePath, inputPath, timelimit);
     else if (language === "python")
-      output = await executePython(filePath, inputPath);
+      output = await executePython(filePath, inputPath, timelimit);
 
     res.json({ filePath, inputPath, output });
   } catch (error) {

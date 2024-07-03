@@ -154,10 +154,123 @@ const updateUserPassword = async (req, res) => {
     .json({ message: "Updated password successfully!" });
 };
 
+const getUsersAddedData = async (req, res) => {
+  try {
+    // Aggregate users by month, but only for those with the role "user"
+    const results = await User.aggregate([
+      {
+        $match: { role: "user" }, // Filter for role "user"
+      },
+      {
+        $project: {
+          month: { $month: "$verified" }, // Assuming 'verified' is the timestamp field
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 }, // Sort by month
+      },
+    ]);
+
+    // Map results to data structure
+    const monthlyCounts = new Array(12).fill(0); // Initialize array for 12 months
+
+    results.forEach(({ _id, count }) => {
+      monthlyCounts[_id - 1] = count; // _id is the month number (1-12)
+    });
+
+    // Prepare data for front-end
+    const usersAddedData = {
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      datasets: [
+        {
+          label: "Users Added (Role: User)",
+          data: monthlyCounts,
+          backgroundColor: "rgba(37, 99, 235, 0.6)", // Adjust color as needed
+        },
+      ],
+    };
+
+    return res.status(StatusCodes.OK).json({ usersAddedData });
+  } catch (error) {
+    console.error("Error:", error);
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+};
+
+const getUserRolesData = async (req, res) => {
+  try {
+    // Aggregate user counts by role
+    const results = await User.aggregate([
+      {
+        $group: {
+          _id: "$role", // Group by role
+          count: { $sum: 1 }, // Count number of users per role
+        },
+      },
+      {
+        $sort: { _id: 1 }, // Optional: Sort by role if needed
+      },
+    ]);
+
+    // Map results to data structure
+    const roles = ["admin", "owner", "user"]; // Define roles
+    const counts = roles.map((role) => {
+      const result = results.find((r) => r._id === role);
+      return result ? result.count : 0; // Get count or default to 0
+    });
+
+    // Prepare data for front-end
+    const userRolesData = {
+      labels: roles,
+      datasets: [
+        {
+          label: "User Roles",
+          data: counts,
+          backgroundColor: [
+            "rgba(37, 99, 235, 0.6)", // Admin
+            "rgba(29, 78, 216, 0.6)", // Owner
+            "rgba(59, 130, 246, 0.6)", // User
+          ],
+        },
+      ],
+    };
+
+    return res.status(StatusCodes.OK).json({ userRolesData });
+  } catch (error) {
+    console.error("Error:", error);
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getSingleUser,
   showCurrentUser,
   updateUser,
   updateUserPassword,
+  getUsersAddedData,
+  getUserRolesData,
 };

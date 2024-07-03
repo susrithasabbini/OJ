@@ -7,6 +7,7 @@ const {
   getProblemBySlug,
   getLeaderboard,
   getSolvedProblems,
+  getProblemsAddedData,
 } = require("../controllers/problemController");
 const {
   authenticateUser,
@@ -32,6 +33,12 @@ router
   );
 
 router.get("/leaderboard", getLeaderboard);
+router.get(
+  "/getProblemsAdded",
+  authenticateUser,
+  authorizePermissions("admin", "owner"),
+  getProblemsAddedData
+);
 router.get("/:userId/solvedProblems", getSolvedProblems);
 
 router.route("/:slug/description").get(getProblemBySlug);

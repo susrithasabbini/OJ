@@ -1,10 +1,8 @@
 const {
-  downloadCodeFromFirebase,
-  downloadInputFromFirebase,
   downloadPythonOutputFromFirebase,
 } = require("./firebase/downloadFileFromFirebase");
 
-const { exec } = require("child_process");
+const { exec, spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -14,27 +12,42 @@ if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
-const executePython = (filepath, inputPath) => {
+const executePython = (filepath, inputPath, timelimit) => {
   return new Promise((resolve, reject) => {
     fs.readFile(inputPath, "utf8", (err, inputData) => {
       if (err) {
         return reject({ error: err });
       }
 
-      // execute python command
       const command = `python "${filepath}"`;
 
-      exec(command, { shell: "cmd.exe" }, (error, stdout, stderr) => {
-        if (error) {
-          reject({ error, stderr });
-          return;
-        }
-        if (stderr) {
-          reject(stderr);
-          return;
+      const proc = spawn(command, { shell: "cmd.exe" });
+
+      let stdout = "";
+      let stderr = "";
+
+      proc.stdin.write(inputData);
+      proc.stdin.end();
+
+      proc.stdout.on("data", (data) => {
+        if (data) stdout += data.toString();
+      });
+
+      proc.stderr.on("data", (data) => {
+        if (data) stderr += data.toString();
+      });
+
+      proc.on("close", (code) => {
+        if (code !== 0) {
+          return reject({ error: `Process exited with code ${code}`, stderr });
         }
         resolve(stdout);
-      }).stdin.end(inputData);
+      });
+
+      setTimeout(() => {
+        proc.kill();
+        resolve("time limit exceeded");
+      }, timelimit * 1000);
     });
   });
 };
@@ -57,7 +70,7 @@ const validatePythonTestCases = async (
       { shell: "cmd.exe", timeout: timelimit * 1000 },
       async (error, stdout, stderr) => {
         if (stderr) {
-          return reject({ stderr });
+          return reject(stderr);
         } else if (error) {
           if (error.killed) {
             return resolve("time limit exceeded");

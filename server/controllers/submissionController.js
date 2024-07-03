@@ -117,6 +117,67 @@ const editSubmission = async (req, res) => {
   }
 };
 
+const getSubmissionsData = async (req, res) => {
+  try {
+    // Aggregate submissions by month
+    const results = await Submission.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" }, // Assuming 'createdAt' is the timestamp field
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 }, // Sort by month
+      },
+    ]);
+
+    // Map results to data structure
+    const monthlyCounts = new Array(12).fill(0); // Initialize array for 12 months
+
+    results.forEach(({ _id, count }) => {
+      monthlyCounts[_id - 1] = count; // _id is the month number (1-12)
+    });
+
+    // Prepare data for front-end
+    const submissionsData = {
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      datasets: [
+        {
+          label: "Submissions",
+          data: monthlyCounts,
+          backgroundColor: "rgba(29, 78, 216, 0.6)", // Adjust color as needed
+        },
+      ],
+    };
+
+    return res.status(StatusCodes.OK).json({ submissionsData });
+  } catch (error) {
+    console.error("Error:", error);
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+};
+
 module.exports = {
   getAllSubmissions,
   createSubmission,
@@ -124,4 +185,5 @@ module.exports = {
   getSingleSubmission,
   deleteSubmission,
   editSubmission,
+  getSubmissionsData,
 };

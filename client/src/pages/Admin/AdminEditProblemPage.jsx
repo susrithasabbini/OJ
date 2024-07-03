@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  Input,
-  Button,
-  Card,
-  Textarea,
-  RadioGroup,
-  Radio,
-} from "@nextui-org/react";
+import { Input, Button, Textarea, RadioGroup, Radio } from "@nextui-org/react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { url } from "../../config";
@@ -26,6 +19,9 @@ const AdminEditProblemPage = () => {
     cppoutput: null,
     javaoutput: null,
     pythonoutput: null,
+    cppCodeStub: "",
+    javaCodeStub: "",
+    pythonCodeStub: "",
   });
   const [testCases, setTestCases] = useState([
     { input: "", output: "", explanation: "", sample: false },
@@ -47,6 +43,7 @@ const AdminEditProblemPage = () => {
           difficulty,
           input,
           output,
+          codeStubs,
           slug: slugData,
           title,
           testCases,
@@ -59,9 +56,12 @@ const AdminEditProblemPage = () => {
           description,
           constraints,
           input,
-          cppoutput: output[0]?.cpp,
-          javaoutput: output[0]?.java,
-          pythonoutput: output[0]?.python,
+          cppCodeStub: codeStubs[0]?.cpp,
+          javaCodeStub: codeStubs[0]?.java,
+          pythonCodeStub: codeStubs[0]?.python,
+          cppoutput: output[0]?.cpp || "",
+          javaoutput: output[0]?.java || "",
+          pythonoutput: output[0]?.python || "",
           title,
         });
         setTestCases(testCases);
@@ -154,6 +154,9 @@ const AdminEditProblemPage = () => {
     formData.append("cppoutput", details.cppoutput); // Append file object
     formData.append("javaoutput", details.javaoutput); // Append file object
     formData.append("pythonoutput", details.pythonoutput); // Append file object
+    formData.append("cppCodeStub", details.cppCodeStub); // Append file object
+    formData.append("javaCodeStub", details.javaCodeStub); // Append file object
+    formData.append("pythonCodeStub", details.pythonCodeStub); // Append file object
 
     testCases.forEach((testCase, index) => {
       formData.append(`testCases[${index}][input]`, testCase.input);
@@ -165,6 +168,8 @@ const AdminEditProblemPage = () => {
     tags.forEach((tag, index) => {
       formData.append(`tags[${index}]`, tag);
     });
+
+    console.log(details);
 
     try {
       await axios.put(`${url}/api/v1/problems/${problem._id}`, formData, {
@@ -184,7 +189,7 @@ const AdminEditProblemPage = () => {
     <div className="p-6 h-fit w-full">
       <h1 className="text-2xl font-bold mb-4">Edit Problem</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card className="p-6 space-y-4">
+        <div className="p-6 space-y-4">
           <h2 className="text-xl font-semibold">Problem Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
@@ -242,6 +247,39 @@ const AdminEditProblemPage = () => {
             onChange={handleDetailChange}
             isRequired={true}
           />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Textarea
+              underlined
+              fullWidth
+              autoComplete="false"
+              label="C++ Code Stub"
+              name="cppCodeStub"
+              value={details?.cppCodeStub}
+              onChange={handleDetailChange}
+              isRequired={true}
+            />
+            <Textarea
+              underlined
+              fullWidth
+              autoComplete="false"
+              label="Java Code Stub"
+              name="javaCodeStub"
+              value={details?.javaCodeStub}
+              onChange={handleDetailChange}
+              isRequired={true}
+            />
+            <Textarea
+              underlined
+              fullWidth
+              autoComplete="false"
+              label="Python Code Stub"
+              name="pythonCodeStub"
+              value={details?.pythonCodeStub}
+              onChange={handleDetailChange}
+              isRequired={true}
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p>Input: </p>
@@ -295,9 +333,9 @@ const AdminEditProblemPage = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-6 space-y-4">
+        <div className="p-6 space-y-4">
           <h2 className="text-xl font-semibold">Test Cases</h2>
           {testCases?.map((testCase, index) => (
             <div key={index} className="space-y-2">
@@ -366,9 +404,9 @@ const AdminEditProblemPage = () => {
           <Button onClick={handleAddTestCase} variant="flat" color="primary">
             Add Test Case
           </Button>
-        </Card>
+        </div>
 
-        <Card className="p-6 space-y-4">
+        <div className="p-6 space-y-4">
           <h2 className="text-xl font-semibold">Tags</h2>
           {tags?.map((tag, index) => (
             <div key={index} className="flex items-center space-x-4">
@@ -396,7 +434,7 @@ const AdminEditProblemPage = () => {
           <Button variant="flat" color="primary" onClick={handleAddTag}>
             Add Tag
           </Button>
-        </Card>
+        </div>
 
         <Button type="submit" color="primary" auto>
           Submit

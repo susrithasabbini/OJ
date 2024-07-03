@@ -117,8 +117,19 @@ const getProblemById = async (req, res) => {
 };
 
 const editProblem = async (req, res) => {
-  const { slug, description, title, difficulty, constraints, tags, testCases } =
-    req.body;
+  const {
+    slug,
+    description,
+    title,
+    difficulty,
+    constraints,
+    tags,
+    testCases,
+    cppCodeStub,
+    javaCodeStub,
+    pythonCodeStub,
+  } = req.body;
+
   const { input, cppoutput, javaoutput, pythonoutput } = req.files;
 
   const id = req.params.id;
@@ -132,14 +143,11 @@ const editProblem = async (req, res) => {
 
   // Prepare update data object
   const updateData = {};
-
-  // Always set createdBy field to the current user ID
   updateData.createdBy = req.user._id;
 
   try {
     // Find the existing problem by ID
     let existingProblem = await Problem.findById(id);
-
     // Handle case where problem does not exist
     if (!existingProblem) {
       return res
@@ -156,10 +164,33 @@ const editProblem = async (req, res) => {
     if (constraints) updateData.constraints = constraints;
     if (tags) updateData.tags = tags;
 
-    // Initialize updateData.output if not already initialized
-    if (!updateData.output) {
-      updateData.output = [];
+    // Handle code stubs
+    if (cppCodeStub || javaCodeStub || pythonCodeStub) {
+      if (
+        !existingProblem.codeStubs ||
+        !Array.isArray(existingProblem.codeStubs)
+      ) {
+        existingProblem.codeStubs = [{ cpp: "", java: "", python: "" }];
+      }
+
+      if (existingProblem.codeStubs.length !== 0)
+        updateData.codeStubs = existingProblem.codeStubs;
+      else updateData.codeStubs = [{ cpp: "", java: "", python: "" }];
+
+      if (cppCodeStub !== undefined) updateData.codeStubs[0].cpp = cppCodeStub;
+      if (javaCodeStub !== undefined)
+        updateData.codeStubs[0].java = javaCodeStub;
+      if (pythonCodeStub !== undefined)
+        updateData.codeStubs[0].python = pythonCodeStub;
     }
+
+    if (!existingProblem.output || !Array.isArray(existingProblem.output)) {
+      existingProblem.output = [{ cpp: "", java: "", python: "" }];
+    }
+
+    if (existingProblem.output.length !== 0)
+      updateData.output = existingProblem.output;
+    else updateData.output = [{ cpp: "", java: "", python: "" }];
 
     // Handle file uploads and update paths
     if (input) {
@@ -171,16 +202,13 @@ const editProblem = async (req, res) => {
       updateData.input = inputFilePath;
     }
 
-    // Construct a single object for all output file paths
-    const outputObject = {};
-
     if (cppoutput) {
       const cppOutputFilePath = await saveFileToFirebase(
         "cppoutputs",
         "txt",
         cppoutput[0].buffer // Accessing buffer directly
       );
-      outputObject.cpp = cppOutputFilePath;
+      updateData.output[0].cpp = cppOutputFilePath;
     }
 
     if (javaoutput) {
@@ -189,7 +217,7 @@ const editProblem = async (req, res) => {
         "txt",
         javaoutput[0].buffer // Accessing buffer directly
       );
-      outputObject.java = javaOutputFilePath;
+      updateData.output[0].java = javaOutputFilePath;
     }
 
     if (pythonoutput) {
@@ -198,11 +226,8 @@ const editProblem = async (req, res) => {
         "txt",
         pythonoutput[0].buffer // Accessing buffer directly
       );
-      outputObject.python = pythonOutputFilePath;
+      updateData.output[0].python = pythonOutputFilePath;
     }
-
-    // Push the single output object containing all file paths to updateData.output
-    updateData.output.push(outputObject);
 
     // Perform the update operation and return the updated problem
     existingProblem = await Problem.findByIdAndUpdate(id, updateData, {
@@ -367,6 +392,67 @@ const getSolvedProblems = async (req, res) => {
   }
 };
 
+const getProblemsAddedData = async (req, res) => {
+  try {
+    // Aggregate problems by month
+    const results = await Problem.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 }, // Sort by month
+      },
+    ]);
+
+    // Map results to data structure
+    const monthlyCounts = new Array(12).fill(0); // Initialize array for 12 months
+
+    results.forEach(({ _id, count }) => {
+      monthlyCounts[_id - 1] = count; // _id is the month number (1-12)
+    });
+
+    // Prepare data for front-end
+    const problemsAddedData = {
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      datasets: [
+        {
+          label: "Problems Added",
+          data: monthlyCounts,
+          backgroundColor: "rgba(59, 130, 246, 0.6)",
+        },
+      ],
+    };
+
+    return res.status(StatusCodes.OK).json({ problemsAddedData });
+  } catch (error) {
+    console.error("Error:", error);
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+};
+
 module.exports = {
   getLeaderboard,
   getAllProblems,
@@ -376,4 +462,5 @@ module.exports = {
   editProblem,
   deleteProblem,
   getSolvedProblems,
+  getProblemsAddedData,
 };

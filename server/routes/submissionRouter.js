@@ -1,3 +1,4 @@
+const router = require("express").Router();
 const {
   getAllSubmissions,
   createSubmission,
@@ -5,23 +6,44 @@ const {
   editSubmission,
   deleteSubmission,
   getSingleSubmission,
+  getSubmissionsData,
 } = require("../controllers/submissionController");
 const {
   authenticateUser,
   authorizePermissions,
 } = require("../middlewares/authentication");
 
-const router = require("express").Router();
+router
+  .route("/getSubmissionsData")
+  .get(
+    authenticateUser,
+    authorizePermissions("admin", "owner"),
+    getSubmissionsData
+  );
 
 router
   .route("/")
-  .get(authenticateUser, authorizePermissions, getAllSubmissions)
-  .post(authenticateUser, authorizePermissions, createSubmission);
+  .get(
+    authenticateUser,
+    authorizePermissions("admin", "owner"),
+    getAllSubmissions
+  )
+  .post(
+    authenticateUser,
+    authorizePermissions("admin", "owner"),
+    createSubmission
+  );
+
 router.get("/user/:userId", getUserSubmissions);
+
 router
   .route("/:id")
   .get(authenticateUser, getSingleSubmission)
-  .put(authenticateUser, authorizePermissions, editSubmission)
-  .delete(authenticateUser, authorizePermissions, deleteSubmission);
+  .put(authenticateUser, authorizePermissions("admin", "owner"), editSubmission)
+  .delete(
+    authenticateUser,
+    authorizePermissions("admin", "owner"),
+    deleteSubmission
+  );
 
 module.exports = router;

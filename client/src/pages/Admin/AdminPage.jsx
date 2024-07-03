@@ -13,6 +13,10 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { url } from "../../config";
+import { toast } from "sonner";
 
 ChartJS.register(
   CategoryScale,
@@ -28,97 +32,81 @@ ChartJS.register(
 
 const AdminPage = () => {
   const { user } = useGlobalContext();
+  const [problemsAddedData, setProblemsAddedData] = useState();
+  const [usersAddedData, setUsersAddedData] = useState();
+  const [submissionsData, setSubmissionsData] = useState();
+  const [problemsLoading, setProblemsLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [submissionsLoading, setSubmissionsLoading] = useState(true);
+  const [userRolesData, setUserRolesData] = useState();
+  const [userRolesLoading, setUserRolesLoading] = useState(true);
+
+  useEffect(() => {
+    setProblemsLoading(true);
+    setUsersLoading(true);
+    setSubmissionsLoading(true);
+    setUserRolesLoading(true);
+    const getProblemsAddedData = async () => {
+      try {
+        const response = await axios.get(
+          `${url}/api/v1/problems/getProblemsAdded`,
+          {
+            withCredentials: true,
+          }
+        );
+        setProblemsAddedData(response.data.problemsAddedData);
+        setProblemsLoading(false);
+      } catch (error) {
+        toast.error("Failed to fetch problem details");
+      }
+    };
+
+    const getUsersAddedData = async () => {
+      try {
+        const response = await axios.get(`${url}/api/v1/users/getUsersAdded`, {
+          withCredentials: true,
+        });
+        setUsersAddedData(response.data.usersAddedData);
+        setUsersLoading(false);
+      } catch (error) {
+        toast.error("Failed to fetch problem details");
+      }
+    };
+
+    const getSubmissionsData = async () => {
+      try {
+        const response = await axios.get(
+          `${url}/api/v1/submissions/getSubmissionsData`,
+          { withCredentials: true }
+        );
+        setSubmissionsData(response.data.submissionsData);
+        setSubmissionsLoading(false);
+      } catch (error) {
+        toast.error("Failed to fetch submissions details");
+      }
+    };
+
+    const getUserRolesData = async () => {
+      try {
+        const response = await axios.get(`${url}/api/v1/users/getUserRoles`, {
+          withCredentials: true,
+        });
+        setUserRolesData(response.data.userRolesData);
+        setUserRolesLoading(false);
+      } catch (error) {
+        toast.error("Failed to fetch problem details");
+      }
+    };
+
+    getProblemsAddedData();
+    getSubmissionsData();
+    getUsersAddedData();
+    getUserRolesData();
+  }, []);
 
   if (user.role !== "admin" && user.role !== "owner") {
     return <NotFoundPage message={"Not authorized to view this route!"} />;
   }
-
-  const problemsAddedData = {
-    labels: [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ],
-    datasets: [
-      {
-        label: "Problems Added",
-        data: [30, 20, 27, 18, 23, 34, 43, 30, 25, 20, 32, 27],
-        backgroundColor: "rgba(59, 130, 246, 0.6)",
-      },
-    ],
-  };
-
-  const usersAddedData = {
-    labels: [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ],
-    datasets: [
-      {
-        label: "Users Added",
-        data: [50, 40, 47, 38, 43, 54, 63, 50, 45, 40, 52, 47],
-        backgroundColor: "rgba(37, 99, 235, 0.6)",
-      },
-    ],
-  };
-
-  const submissionsData = {
-    labels: [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ],
-    datasets: [
-      {
-        label: "Submissions",
-        data: [300, 450, 400, 380, 420, 460, 550, 530, 490, 480, 520, 510],
-        backgroundColor: "rgba(29, 78, 216, 0.6)",
-      },
-    ],
-  };
-
-  const userRolesData = {
-    labels: ["Admin", "Owner", "User"],
-    datasets: [
-      {
-        label: "User Roles",
-        data: [5, 2, 93],
-        backgroundColor: [
-          "rgba(37, 99, 235, 0.6)",
-          "rgba(29, 78, 216, 0.6)",
-          "rgba(59, 130, 246, 0.6)",
-        ],
-      },
-    ],
-  };
 
   const options = {
     // responsive: true,
@@ -128,7 +116,7 @@ const AdminPage = () => {
       },
       title: {
         display: true,
-        text: "Problems Added Per Month",
+        text: "Users Joined Per Month",
       },
     },
   };
@@ -159,6 +147,17 @@ const AdminPage = () => {
     },
   };
 
+  if (
+    problemsLoading ||
+    usersLoading ||
+    submissionsLoading ||
+    userRolesLoading
+  ) {
+    return (
+      <h1 className="text-2xl text-center text-blue-600 my-40">Loading...</h1>
+    );
+  }
+
   return (
     <>
       <div className="p-6 h-fit w-full lg:block hidden">
@@ -175,7 +174,7 @@ const AdminPage = () => {
             </div>
             <div className="bg-white p-6 rounded-lg shadow-lg h-96">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                Users Added
+                Users Joined
               </h2>
               <Bar data={usersAddedData} options={options} />
             </div>
