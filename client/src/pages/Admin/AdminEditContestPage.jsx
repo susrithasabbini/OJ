@@ -124,8 +124,11 @@ const AdminEditContestPage = () => {
       problems: selectedProblems.map((p) => ({
         problemId: p.problemId,
         points: Number(p.points),
+        solvedBy: p.solvedBy,
       })),
     };
+
+    console.log({ contestData });
 
     try {
       await axios.put(`${url}/api/v1/contests/${contestId}`, contestData, {
