@@ -12,6 +12,10 @@ if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
+const normalize = (str) => {
+  return str.replace(/\r\n/g, "\n").trim();
+};
+
 const executePython = (filepath, inputPath, timelimit) => {
   return new Promise((resolve, reject) => {
     fs.readFile(inputPath, "utf8", (err, inputData) => {
@@ -21,7 +25,7 @@ const executePython = (filepath, inputPath, timelimit) => {
 
       const command = `python "${filepath}"`;
 
-      const proc = spawn(command, { shell: "cmd.exe" });
+      const proc = spawn(command);
 
       let stdout = "";
       let stderr = "";
@@ -64,10 +68,12 @@ const validatePythonTestCases = async (
   const jobId = path.basename(filePath).split(".")[0];
   const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
 
+  console.log(`python "${filePath}" < "${inputPath}" > "${codeOutputPath}"`);
+
   return new Promise((resolve, reject) => {
     const execCommand = exec(
       `python "${filePath}" < "${inputPath}" > "${codeOutputPath}"`,
-      { shell: "cmd.exe", timeout: timelimit * 1000 },
+      { timeout: timelimit * 1000 },
       async (error, stdout, stderr) => {
         if (stderr) {
           return reject(stderr);
@@ -88,7 +94,7 @@ const validatePythonTestCases = async (
             "utf8"
           );
 
-          if (generatedOutput.trim() === expectedOutput.trim()) {
+          if (normalize(generatedOutput) === normalize(expectedOutput)) {
             resolve("accepted");
           } else {
             resolve("failed");

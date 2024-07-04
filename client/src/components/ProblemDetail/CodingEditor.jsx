@@ -6,6 +6,7 @@ import {
   Tab,
   Tabs,
   Textarea,
+  Tooltip,
 } from "@nextui-org/react";
 import { useState } from "react";
 import { Pane } from "split-pane-react";
@@ -14,6 +15,7 @@ import { url } from "../../config";
 import { useGlobalContext } from "../../context";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
+import { RotateCcw } from "lucide-react";
 
 const CodingEditor = ({ problem }) => {
   const [code, setCode] = useState(problem[0]?.codeStubs?.[0]?.cpp || "");
@@ -87,6 +89,23 @@ const CodingEditor = ({ problem }) => {
     setCode(problem[0].codeStubs[0][e.target.value]);
   };
 
+  const handleRetriveCode = async () => {
+    try {
+      const { data } = await axios.post(
+        `${url}/api/v1/submissions/problem/${problem[0]._id}/latestSubmission`,
+        { language },
+        {
+          withCredentials: true,
+        }
+      );
+      setCode(data.latestSubmission.code);
+      setLanguage(data.latestSubmission.language);
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
+
   return (
     <Pane>
       <div className="px-6 bg-white rounded-lg shadow-md h-screen flex flex-col overflow-y-scroll thin-scrollbar">
@@ -103,7 +122,18 @@ const CodingEditor = ({ problem }) => {
             <SelectItem key="python">Python</SelectItem>
             <SelectItem key="java">Java</SelectItem>
           </Select>
-          <div className="flex gap-x-3">
+
+          <div className="flex gap-x-3 items-center">
+            {!contestId && (
+              <Tooltip content="Retrieve submitted code">
+                <RotateCcw
+                  size="20"
+                  color="#334155"
+                  className="cursor-pointer"
+                  onClick={handleRetriveCode}
+                />
+              </Tooltip>
+            )}
             <Button variant="flat" color="primary" onClick={handleRunCode}>
               Run
             </Button>

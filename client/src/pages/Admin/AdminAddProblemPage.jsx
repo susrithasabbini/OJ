@@ -145,7 +145,7 @@ const AdminAddProblemPage = () => {
               name="slug"
               value={details.slug}
               onChange={handleDetailChange}
-              required
+              isRequired={true}
             />
             <Input
               clearable
@@ -156,7 +156,7 @@ const AdminAddProblemPage = () => {
               name="title"
               value={details.title}
               onChange={handleDetailChange}
-              required
+              isRequired={true}
             />
           </div>
           <Textarea
@@ -167,7 +167,7 @@ const AdminAddProblemPage = () => {
             name="description"
             value={details.description}
             onChange={handleDetailChange}
-            required
+            isRequired={true}
           />
           <RadioGroup
             label="Difficulty"
@@ -175,7 +175,7 @@ const AdminAddProblemPage = () => {
             onChange={handleDifficultyChange}
             value={details.difficulty}
             name="difficulty"
-            required
+            isRequired={true}
           >
             <Radio value="Easy">Easy</Radio>
             <Radio value="Medium">Medium</Radio>
@@ -189,7 +189,7 @@ const AdminAddProblemPage = () => {
             name="constraints"
             value={details.constraints}
             onChange={handleDetailChange}
-            required
+            isRequired={true}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -200,6 +200,7 @@ const AdminAddProblemPage = () => {
                     type="file"
                     name="input"
                     onChange={handleDetailChange}
+                    required
                   />
                 </label>
               </div>
@@ -212,6 +213,7 @@ const AdminAddProblemPage = () => {
                     type="file"
                     name="cppoutput"
                     onChange={handleDetailChange}
+                    required
                   />
                 </label>
               </div>
@@ -226,6 +228,7 @@ const AdminAddProblemPage = () => {
                     type="file"
                     name="javaoutput"
                     onChange={handleDetailChange}
+                    required
                   />
                 </label>
               </div>
@@ -238,6 +241,7 @@ const AdminAddProblemPage = () => {
                     type="file"
                     name="pythonoutput"
                     onChange={handleDetailChange}
+                    required
                   />
                 </label>
               </div>
@@ -258,7 +262,7 @@ const AdminAddProblemPage = () => {
                   name="input"
                   value={testCase.input}
                   onChange={(e) => handleTestCaseChange(index, e)}
-                  required
+                  isRequired={true}
                 />
                 <Textarea
                   underlined
@@ -268,7 +272,7 @@ const AdminAddProblemPage = () => {
                   name="cppoutput"
                   value={testCase.cppoutput}
                   onChange={(e) => handleTestCaseChange(index, e)}
-                  required
+                  isRequired={true}
                 />
               </div>
               <Textarea
@@ -328,7 +332,7 @@ const AdminAddProblemPage = () => {
                 label={`Tag ${index + 1}`}
                 value={tag}
                 onChange={(e) => handleTagChange(index, e)}
-                required
+                isRequired={true}
               />
               <Button
                 color="danger"

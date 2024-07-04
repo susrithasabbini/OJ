@@ -45,6 +45,10 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser(process.env.JWT_SECRET));
 
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome!" });
+});
+
 // routes
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);

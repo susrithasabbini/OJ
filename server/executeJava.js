@@ -12,6 +12,10 @@ if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
+const normalize = (str) => {
+  return str.replace(/\r\n/g, "\n").trim();
+};
+
 const executeJava = (filepath, inputPath, timelimit) => {
   return new Promise((resolve, reject) => {
     // Read the input file contents
@@ -25,7 +29,7 @@ const executeJava = (filepath, inputPath, timelimit) => {
 
       const execCommand = exec(
         runCommand,
-        { shell: "cmd.exe", timeout: timelimit * 1000 },
+        { timeout: timelimit * 1000 },
         (error, stdout, stderr) => {
           if (stderr) {
             reject(stderr);
@@ -65,10 +69,12 @@ const validateJavaTestCases = async (
   const jobId = path.basename(filePath).split(".")[0];
   const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
 
+  console.log(`java "${filePath}" < "${inputPath}" > "${codeOutputPath}"`);
+
   return new Promise((resolve, reject) => {
     const execCommand = exec(
       `java "${filePath}" < "${inputPath}" > "${codeOutputPath}"`,
-      { shell: "cmd.exe", timeout: timelimit * 1000 },
+      { timeout: timelimit * 1000 },
       async (error, stdout, stderr) => {
         if (stderr) {
           reject(stderr);
@@ -92,7 +98,7 @@ const validateJavaTestCases = async (
             "utf8"
           );
 
-          if (generatedOutput.trim() === expectedOutput.trim()) {
+          if (normalize(generatedOutput) === normalize(expectedOutput)) {
             resolve("accepted");
           } else {
             resolve("failed");

@@ -23,6 +23,10 @@ const AdminSidebar = () => {
     return pathname === path;
   };
 
+  const isLinkStartWith = (path) => {
+    return pathname.startsWith(path);
+  };
+
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isContestMenuOpen, setContestMenuOpen] = useState(false);
 
@@ -101,10 +105,10 @@ const AdminSidebar = () => {
               icon={<CirclePlus size={20} />}
               text="Add Problem"
             />
-            {isLinkActive("/admin/add-problem") && (
+            {isLinkStartWith("/admin/edit-problem") && (
               <MenuLink
                 to="edit-problem"
-                isMenuOpen={isLinkActive("/admin/edit-problem")}
+                isMenuOpen={isLinkStartWith("/admin/edit-problem")}
                 icon={<Edit size={20} />}
                 text="Edit Problem"
               />
@@ -150,10 +154,10 @@ const AdminSidebar = () => {
               icon={<CirclePlus size={20} />}
               text="Add Contest"
             />
-            {isLinkActive("/admin/add-contest") && (
+            {isLinkStartWith("/admin/edit-contest") && (
               <MenuLink
                 to="edit-contest"
-                isMenuOpen={isLinkActive("/admin/edit-contest")}
+                isMenuOpen={isLinkStartWith("/admin/edit-contest")}
                 icon={<Edit size={20} />}
                 text="Edit Contest"
               />

@@ -12,15 +12,18 @@ if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
+const normalize = (str) => {
+  return str.replace(/\r\n/g, "\n").trim();
+};
+
 const executeCpp = (filepath, inputPath, timelimit) => {
   const jobId = path.basename(filepath).split(".")[0];
-  const outPath = path.join(path.dirname(filepath), `${jobId}.exe`);
+  const outPath = path.join(path.dirname(filepath), `${jobId}.out`);
 
   return new Promise((resolve, reject) => {
     // Compile the C++ code
     exec(
       `g++ "${filepath}" -o "${outPath}"`,
-      { shell: "cmd.exe" },
       (compileError, stdout, stderr) => {
         if (compileError) {
           return reject({ error: compileError.message, stderr });
@@ -30,7 +33,7 @@ const executeCpp = (filepath, inputPath, timelimit) => {
           // Execute the compiled executable with time limit
           const execCommand = exec(
             `"${outPath}" < "${inputPath}"`,
-            { shell: "cmd.exe", timeout: timelimit * 1000 },
+            { timeout: timelimit * 1000 },
             (execError, execStdout, execStderr) => {
               if (execStderr) {
                 return reject({ stderr: execStderr });
@@ -67,12 +70,16 @@ const validateCppTestCases = async (
 
   const jobId = path.basename(filePath).split(".")[0];
   const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
-  const outPath = path.join(path.dirname(filePath), `${jobId}.exe`);
+  const outPath = path.join(path.dirname(filePath), `${jobId}.out`);
+
+  console.log(
+    `g++ "${filePath}" -o "${outPath}" && "${outPath}" < "${inputPath}" > "${codeOutputPath}"`
+  );
 
   return new Promise((resolve, reject) => {
     const execCommand = exec(
       `g++ "${filePath}" -o "${outPath}" && "${outPath}" < "${inputPath}" > "${codeOutputPath}"`,
-      { shell: "cmd.exe", timeout: timelimit * 1000 },
+      { timeout: timelimit * 1000 },
       async (error, stdout, stderr) => {
         if (stderr) {
           return reject(stderr);
@@ -93,7 +100,7 @@ const validateCppTestCases = async (
             "utf8"
           );
 
-          if (generatedOutput.trim() === expectedOutput.trim()) {
+          if (normalize(generatedOutput) === normalize(expectedOutput)) {
             resolve("accepted");
           } else {
             resolve("failed");

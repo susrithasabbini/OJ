@@ -64,6 +64,46 @@ const deleteSubmission = async (req, res) => {
   }
 };
 
+const getAllUserSubmissions = async (req, res) => {
+  const { userId, contestId, problemId } = req.body;
+
+  if (!userId || !problemId) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "User Id & Problem Id are required!" });
+  }
+
+  try {
+    if (contestId) {
+      const submissions = await Submission.find(
+        {
+          userId,
+          problemId,
+          contestId,
+        },
+        "language code output createdAt"
+      )
+        .sort({ createdAt: -1 }) // Sort by creation date in descending order to get the most recent submission
+        .exec();
+      return res.status(StatusCodes.OK).json({ submissions });
+    } else {
+      const submissions = await Submission.find(
+        {
+          userId,
+          problemId,
+        },
+        "language code output createdAt"
+      )
+        .sort({ createdAt: -1 }) // Sort by creation date in descending order to get the most recent submission
+        .exec();
+      return res.status(StatusCodes.OK).json({ submissions });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error });
+  }
+};
+
 const getUserSubmissions = async (req, res) => {
   const userId = req.params.userId;
 
@@ -178,6 +218,35 @@ const getSubmissionsData = async (req, res) => {
   }
 };
 
+const retrieveLastSubmittedCode = async (req, res) => {
+  try {
+    const userId = req.user.userId; // Retrieve user ID from request object
+    const { problemId } = req.params; // Retrieve problem ID from request parameters
+
+    // Find the most recent submission for the given user and problem
+    const latestSubmission = await Submission.findOne({
+      userId: userId,
+      problemId: problemId,
+      language: req.body.language,
+    })
+      .sort({ createdAt: -1 }) // Sort by creation date in descending order to get the most recent submission
+      .exec();
+
+    if (!latestSubmission) {
+      return res
+        .status(404)
+        .json({ message: "No submissions found for this problem." });
+    }
+
+    // Send the submission details as the response
+    res.status(200).json({ latestSubmission });
+  } catch (error) {
+    // Handle any errors that occur
+    console.error("Error retrieving the last submission:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 module.exports = {
   getAllSubmissions,
   createSubmission,
@@ -186,4 +255,6 @@ module.exports = {
   deleteSubmission,
   editSubmission,
   getSubmissionsData,
+  getAllUserSubmissions,
+  retrieveLastSubmittedCode,
 };

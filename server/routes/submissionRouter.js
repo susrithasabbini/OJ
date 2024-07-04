@@ -7,11 +7,19 @@ const {
   deleteSubmission,
   getSingleSubmission,
   getSubmissionsData,
+  getAllUserSubmissions,
+  retrieveLastSubmittedCode,
 } = require("../controllers/submissionController");
 const {
   authenticateUser,
   authorizePermissions,
 } = require("../middlewares/authentication");
+
+router.post(
+  "/problem/:problemId/latestSubmission",
+  authenticateUser,
+  retrieveLastSubmittedCode
+);
 
 router
   .route("/getSubmissionsData")
@@ -19,7 +27,8 @@ router
     authenticateUser,
     authorizePermissions("admin", "owner"),
     getSubmissionsData
-  );
+  )
+  .post(authenticateUser, getAllUserSubmissions);
 
 router
   .route("/")
