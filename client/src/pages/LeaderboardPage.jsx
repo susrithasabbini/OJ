@@ -37,9 +37,9 @@ const LeaderboardPage = () => {
     fetchLeaderboard();
   }, []);
 
-  const loggedInUser = users?.find((u) => u.username === user.username);
+  const loggedInUser = users?.find((u) => u.username === user?.username);
   const loggedInUserRank =
-    users?.findIndex((u) => u.username === user.username) + 1;
+    users?.findIndex((u) => u.username === user?.username) + 1;
 
   return (
     <div className="p-6 h-fit w-full">
@@ -78,7 +78,7 @@ const LeaderboardPage = () => {
               <TableRow
                 key={u.userId}
                 className={`${
-                  u.username === user.username
+                  u.username === user?.username
                     ? "bg-yellow-100/60"
                     : index % 2 === 0
                     ? "bg-gray-100"

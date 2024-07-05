@@ -73,8 +73,8 @@ const ProblemStatement = ({ problem }) => {
   useEffect(() => {
     const fetchSubmissions = async () => {
       let body;
-      if (contestId) body = { problemId, userId: user.userId, contestId };
-      else body = { problemId, userId: user.userId };
+      if (contestId) body = { problemId, userId: user?.userId, contestId };
+      else body = { problemId, userId: user?.userId };
       try {
         const response = await axios.post(
           `${url}/api/v1/submissions/getSubmissionsData`,
@@ -92,7 +92,7 @@ const ProblemStatement = ({ problem }) => {
     if (activeTab === "submissions") {
       fetchSubmissions();
     }
-  }, [activeTab, contestId, problemId, user.userId]);
+  }, [activeTab, contestId, problemId, user?.userId]);
 
   console.log(activeTab);
 
