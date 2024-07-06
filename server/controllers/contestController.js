@@ -22,7 +22,7 @@ const getSingleContest = async (req, res) => {
     if (!contest) {
       return res
         .status(StatusCodes.NOT_FOUND)
-        .json({ error: "Contest not found" });
+        .json({ message: "Contest not found" });
     }
 
     // Fetch the full details of each problem
@@ -133,7 +133,7 @@ const deleteContest = async (req, res) => {
 const createContest = async (req, res) => {
   const { title, description, problems, startDate, endDate } = req.body;
 
-  console.log("Request Body:", req.body); // Check if this logs the expected data
+  // console.log("Request Body:", req.body); // Check if this logs the expected data
 
   if (!title || !description || !problems || !startDate || !endDate) {
     return res
@@ -180,14 +180,14 @@ const registerContest = async (req, res) => {
     if (!contest) {
       return res
         .status(StatusCodes.BAD_REQUEST)
-        .json({ error: "Contest not found" });
+        .json({ message: "Contest not found" });
     }
 
     // Check if the user is already registered
     if (contest.participants.includes(userId)) {
       return res
         .status(StatusCodes.BAD_REQUEST)
-        .json({ error: "User is already registered for this contest" });
+        .json({ message: "User is already registered for this contest" });
     }
 
     contest.participants.push(userId);

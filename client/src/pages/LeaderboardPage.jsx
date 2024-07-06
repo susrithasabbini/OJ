@@ -59,7 +59,7 @@ const LeaderboardPage = () => {
               <TableColumn className="text-left p-4">Points</TableColumn>
             </TableHeader>
             <TableBody>
-              {loggedInUserRank !== 1 && (
+              {loggedInUserRank !== 0 && loggedInUserRank !== 1 && (
                 <TableRow className="bg-yellow-100/60 hover:bg-blue-100 transition-all">
                   <TableCell className="py-2 px-4 border-b border-gray-200 font-semibold">
                     {loggedInUserRank}

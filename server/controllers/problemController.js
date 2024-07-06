@@ -7,9 +7,9 @@ const getAllProblems = async (req, res) => {
   try {
     // get only specific fields
     const problems = await Problem.find({}, "slug title difficulty tags");
-    res.status(StatusCodes.OK).json({ problems });
+    return res.status(StatusCodes.OK).json({ problems });
   } catch (error) {
-    res
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: error.message });
   }
@@ -309,10 +309,10 @@ const getLeaderboard = async (req, res) => {
       };
     });
 
-    res.status(200).json({ positions });
+    return res.status(200).json({ positions });
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
-    res.status(500).json({ error: "Failed to fetch leaderboard" });
+    return res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 };
 

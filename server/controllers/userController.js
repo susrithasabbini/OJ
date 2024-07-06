@@ -11,7 +11,7 @@ const getAllUsers = async (req, res) => {
   // console.log(req.user);
   // find users without password
   const users = await User.find({ role: "user" }).select("-password");
-  res.status(StatusCodes.OK).json({ users });
+  return res.status(StatusCodes.OK).json({ users });
 };
 
 const getSingleUser = async (req, res) => {
@@ -21,20 +21,20 @@ const getSingleUser = async (req, res) => {
   );
   // not found
   if (!user) {
-    res
+    return res
       .status(StatusCodes.NOT_FOUND)
       .json({ message: `No user found with username: ${req.params.username}` });
-    throw new CustomError.NotFoundError(
-      `No user found with username: ${req.params.username}`
-    );
+    // throw new CustomError.NotFoundError(
+    //   `No user found with username: ${req.params.username}`
+    // );
   }
   // checkPermissions(req.user, user._id);
-  res.status(StatusCodes.OK).json({ user });
+  return res.status(StatusCodes.OK).json({ user });
 };
 
 const showCurrentUser = async (req, res) => {
   // req.user
-  res.status(StatusCodes.OK).json({ user: req.user });
+  return res.status(StatusCodes.OK).json({ user: req.user });
 };
 
 const updateUser = async (req, res) => {
@@ -130,26 +130,26 @@ const updateUserPassword = async (req, res) => {
   // take old and new passwords
   const { oldPassword, newPassword } = req.body;
   if (!oldPassword || !newPassword) {
-    res
+    return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "Please provide old and new passwords!" });
-    throw new CustomError.BadRequestError(
-      "Please provide old and new passwords!"
-    );
+    // throw new CustomError.BadRequestError(
+    //   "Please provide old and new passwords!"
+    // );
   }
   // matches
   const user = await User.findOne({ _id: req.user.userId });
   const isPasswordCorrect = await user.comparePassword(oldPassword);
   if (!isPasswordCorrect) {
-    res
+    return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "Invalid Credentials!" });
-    throw new CustomError.UnauthenticatedError("Invalid Credentials!");
+    // throw new CustomError.UnauthenticatedError("Invalid Credentials!");
   }
   // update
   user.password = newPassword;
   await user.save();
-  res
+  return res
     .status(StatusCodes.OK)
     .json({ message: "Updated password successfully!" });
 };

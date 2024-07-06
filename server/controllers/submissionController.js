@@ -4,9 +4,9 @@ const Submission = require("../models/Submission");
 const getAllSubmissions = async (req, res) => {
   try {
     const submissions = await Submission.find({});
-    res.status(StatusCodes.OK).json({ submissions });
+    return res.status(StatusCodes.OK).json({ submissions });
   } catch (error) {
-    res
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: error.message });
   }
@@ -27,6 +27,8 @@ const createSubmission = async (req, res) => {
     });
 
     await submission.save();
+
+    return res.status(StatusCodes.OK).json({ submission });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: "Failed to create submission",
@@ -38,9 +40,9 @@ const createSubmission = async (req, res) => {
 const getSingleSubmission = async (req, res) => {
   try {
     const submission = await Submission.find(req.params.id);
-    res.status(StatusCodes.OK).json({ submission });
+    return res.status(StatusCodes.OK).json({ submission });
   } catch (error) {
-    res
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: error.message });
   }
@@ -123,7 +125,7 @@ const getUserSubmissions = async (req, res) => {
       "createdAt"
     );
 
-    res.status(StatusCodes.OK).json({ submissions });
+    return res.status(StatusCodes.OK).json({ submissions });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error });
   }
@@ -149,6 +151,8 @@ const editSubmission = async (req, res) => {
     if (executionTime) submission.executionTime = executionTime;
 
     await submission.save();
+
+    return res.status(StatusCodes.OK).json({ submission });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: "Failed to edit submission",
@@ -239,11 +243,11 @@ const retrieveLastSubmittedCode = async (req, res) => {
     }
 
     // Send the submission details as the response
-    res.status(200).json({ latestSubmission });
+    return res.status(200).json({ latestSubmission });
   } catch (error) {
     // Handle any errors that occur
     console.error("Error retrieving the last submission:", error);
-    res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 

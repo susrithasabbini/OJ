@@ -85,7 +85,7 @@ const ProblemStatement = ({ problem }) => {
         );
         setSubmissions(response.data.submissions);
       } catch (error) {
-        toast.error("Failed to fetch submissions");
+        toast.error(error.response.data.message);
         console.error("Failed to fetch submissions:", error);
       }
     };
@@ -94,7 +94,7 @@ const ProblemStatement = ({ problem }) => {
     }
   }, [activeTab, contestId, problemId, user?.userId]);
 
-  console.log(activeTab);
+  // console.log(submissions);
 
   const isSolvedByUser = (contestId, user, slug) => {
     if (contestId) {

@@ -17,12 +17,20 @@ const register = async (req, res) => {
   const { email, username, password } = req.body;
 
   // check if email exists
+  const usernameExists = await User.findOne({ username });
+
+  if (usernameExists) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "Username already exists!" });
+  }
+
   const emailExists = await User.findOne({ email });
   if (emailExists) {
-    res
+    return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "Email already exists!" });
-    throw new CustomError.BadRequestError("Email already exists!");
+    // throw new CustomError.BadRequestError("Email already exists!");
   }
 
   // first registered user is an admin
@@ -46,7 +54,7 @@ const register = async (req, res) => {
     verificationToken: user.verificationToken,
     origin: origin,
   });
-  res.status(StatusCodes.OK).json({
+  return res.status(StatusCodes.OK).json({
     message: "Success! Please check your email to verify account",
   });
 };
@@ -57,14 +65,14 @@ const verifyEmail = async (req, res) => {
   // check user
   const user = await User.findOne({ email });
   if (!user) {
-    res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid email!" });
-    throw new CustomError.BadRequestError("Invalid email!");
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid email!" });
+    // throw new CustomError.BadRequestError("Invalid email!");
   }
 
   // validate token
   if (user.verificationToken !== verificationToken) {
-    res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid token!" });
-    throw new CustomError.BadRequestError("Invalid token!");
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid token!" });
+    // throw new CustomError.BadRequestError("Invalid token!");
   }
 
   // mark as verified
@@ -72,42 +80,42 @@ const verifyEmail = async (req, res) => {
   user.verified = Date.now();
   user.verificationToken = "";
   await user.save();
-  res.status(StatusCodes.OK).json({ message: "Email verified!!" });
+  return res.status(StatusCodes.OK).json({ message: "Email verified!!" });
 };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  
+
   // check requirements
   if (!email || !password) {
-    res
+    return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "Please provide email and password!" });
-    throw new CustomError.BadRequestError("Please provide email and password!");
+    // throw new CustomError.BadRequestError("Please provide email and password!");
   }
 
   // check user exists
   const user = await User.findOne({ email });
   if (!user) {
-    res
+    return res
       .status(StatusCodes.UNAUTHORIZED)
       .json({ message: "Email does not exist!" });
-    throw new CustomError.UnauthenticatedError("Email does not exist!");
+    // throw new CustomError.UnauthenticatedError("Email does not exist!");
   }
 
   // check password match
   const isPasswordCorrect = await user.comparePassword(password);
   if (!isPasswordCorrect) {
-    res.status(StatusCodes.UNAUTHORIZED).json({ message: "Invalid password!" });
-    throw new CustomError.UnauthenticatedError("Invalid password!");
+    return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Invalid password!" });
+    // throw new CustomError.UnauthenticatedError("Invalid password!");
   }
 
   // if not verified, send please verify
   if (!user.isVerified) {
-    res
+    return res
       .status(StatusCodes.UNAUTHORIZED)
       .json({ message: "Please verify your email!" });
-    throw new CustomError.UnauthenticatedError("Please verify your email!");
+    // throw new CustomError.UnauthenticatedError("Please verify your email!");
   }
   const tokenUser = createTokenUser(user);
   // create refresh token
@@ -117,7 +125,7 @@ const login = async (req, res) => {
   if (existingToken) {
     const { isValid } = existingToken;
     if (!isValid) {
-      res
+      return res
         .status(StatusCodes.UNAUTHORIZED)
         .json({ message: "Invalid Credentials!" });
       throw new CustomError.UnauthenticatedError("Invalid Credentials!");
@@ -136,7 +144,7 @@ const login = async (req, res) => {
 
   await Token.create(userToken);
   attachCookiesToResponse({ res, user: tokenUser, refreshToken });
-  res.status(StatusCodes.OK).json({ user: tokenUser });
+  return res.status(StatusCodes.OK).json({ user: tokenUser });
 };
 
 const logout = async (req, res) => {
@@ -151,17 +159,17 @@ const logout = async (req, res) => {
     httpOnly: true,
     expires: new Date(Date.now()),
   });
-  res.status(StatusCodes.OK).json({ message: "Logged out!!" });
+  return res.status(StatusCodes.OK).json({ message: "Logged out!!" });
 };
 
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   // check email exist
   if (!email) {
-    res
+    return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "Please provide valid email!" });
-    throw new CustomError.BadRequestError("Please provide valid email!");
+    // throw new CustomError.BadRequestError("Please provide valid email!");
   }
 
   // check user exist
@@ -184,7 +192,7 @@ const forgotPassword = async (req, res) => {
     user.passwordTokenExpirationDate = passwordTokenExpirationDate;
     await user.save();
   }
-  res
+  return res
     .status(StatusCodes.OK)
     .json({ message: "Please check your email for reset password link" });
 };
@@ -193,17 +201,17 @@ const resetPassword = async (req, res) => {
   // check requirements
   const { token, email, password } = req.body;
   if (!token || !email || !password) {
-    res
+    return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "Please provide all required fields!" });
-    throw new CustomError.BadRequestError(
-      "Please provide all required fields!"
-    );
+    // throw new CustomError.BadRequestError(
+    //   "Please provide all required fields!"
+    // );
   }
 
   // validate strong password
   if (!validator.isStrongPassword(password)) {
-    res
+    return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "Please provide strong password!" });
   }
@@ -222,10 +230,9 @@ const resetPassword = async (req, res) => {
       user.passwordToken = null;
       user.passwordTokenExpirationDate = null;
       await user.save();
-      res
+      return res
         .status(StatusCodes.OK)
         .json({ message: "Success, redirecting to login page shortly..." });
-      return;
     }
   }
 };

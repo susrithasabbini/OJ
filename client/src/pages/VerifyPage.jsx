@@ -23,11 +23,11 @@ const VerifyPage = () => {
         verificationToken: query.get("token"),
         email: query.get("email"),
       });
-      toast(data.msg);
+      toast(data.message);
     } catch (error) {
       console.log(error);
       setError(true);
-      toast(error.response.data.msg);
+      toast(error.response.data.message);
     }
     setLoading(false);
   };

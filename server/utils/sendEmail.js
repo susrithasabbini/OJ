@@ -16,7 +16,7 @@ const createTransport = async (SENDER_EMAIL_ID, SENDER_EMAIL_PASSWORD) => {
   } catch (error) {
     console.error("Error occurred in createTransport()");
     console.error(error);
-    throw error;
+    // throw error;
   }
 };
 
