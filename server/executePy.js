@@ -17,15 +17,17 @@ const normalize = (str) => {
 };
 
 const executePython = (filepath, inputPath, timelimit) => {
+  console.log({ filepath, inputPath, timelimit });
   return new Promise((resolve, reject) => {
     fs.readFile(inputPath, "utf8", (err, inputData) => {
       if (err) {
         return reject({ error: err });
       }
 
-      const command = `python "${filepath}"`;
+      const command = "python";
+      const args = [filepath];
 
-      const proc = spawn(command);
+      const proc = spawn(command, args);
 
       let stdout = "";
       let stderr = "";

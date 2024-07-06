@@ -55,7 +55,7 @@ const LandingPage = () => {
               Join coding competitions and see how you rank against others. Our
               leaderboard tracks your progress and helps you compete globally.
             </p>
-            <Link to="/competitions">
+            <Link to="/compete">
               <button className="bg-blue-400 text-white px-6 py-3 rounded-full hover:scale-105">
                 View Competitions
               </button>
