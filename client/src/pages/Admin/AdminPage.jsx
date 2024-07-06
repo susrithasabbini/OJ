@@ -1,6 +1,4 @@
-import NotFoundPage from "../NotFoundPage";
 import { Bar, Line, Pie } from "react-chartjs-2";
-import { useGlobalContext } from "../../context";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -31,7 +29,6 @@ ChartJS.register(
 );
 
 const AdminPage = () => {
-  const { user } = useGlobalContext();
   const [problemsAddedData, setProblemsAddedData] = useState();
   const [usersAddedData, setUsersAddedData] = useState();
   const [submissionsData, setSubmissionsData] = useState();
@@ -103,10 +100,6 @@ const AdminPage = () => {
     getUsersAddedData();
     getUserRolesData();
   }, []);
-
-  if (user.role !== "admin" && user.role !== "owner") {
-    return <NotFoundPage message={"Not authorized to view this route!"} />;
-  }
 
   const options = {
     // responsive: true,

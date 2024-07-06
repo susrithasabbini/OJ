@@ -107,7 +107,7 @@ const AdminAddContestPage = () => {
   };
 
   return (
-    <div className="p-6 h-fit w-full">
+    <div className="p-6 h-fit w-full md:pb-0 pb-40">
       <h1 className="text-2xl font-bold mb-4">Add New Contest</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="p-6 space-y-4">

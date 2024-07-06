@@ -51,6 +51,12 @@ const Root = () => {
 };
 
 const AdminRoot = () => {
+  const { user } = useGlobalContext();
+
+  if (!user || user.role === "user") {
+    return <NotFoundPage message={"Not authorized to access this route!"} />;
+  }
+
   return (
     <Fragment>
       <div className="flex flex-row">

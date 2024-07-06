@@ -133,17 +133,17 @@ export default function NavbarComponent({ authLinks, user }) {
       </NavbarContent>
 
       <NavbarMenu>
-        <NavbarItem>
-          <Link
-            href={`/account/${user?.username}`}
-            color="primary"
-            className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
-          >
-            Account
-          </Link>
-        </NavbarItem>
         {!authLinks && user && user.role === "user" && (
           <>
+            <NavbarItem>
+              <Link
+                href={`/account/${user?.username}`}
+                color="primary"
+                className="font-semibold hover:underline hover:text-blue-500 hover:scale-105 transition-transform duration-300 ease-in-out"
+              >
+                Account
+              </Link>
+            </NavbarItem>
             <NavbarItem>
               <Link
                 href="/problems"
