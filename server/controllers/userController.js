@@ -6,6 +6,7 @@ const {
   attachCookiesToResponse,
   checkPermissions,
 } = require("../utils");
+const validator = require("validator");
 
 const getAllUsers = async (req, res) => {
   // console.log(req.user);
@@ -38,11 +39,11 @@ const showCurrentUser = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  const { email, username, skill, skillToRemove } = req.body;
+  const { username, skill, skillToRemove } = req.body;
 
   try {
     // Check if email or username is provided
-    if (!email && !username && !skill && !skillToRemove) {
+    if (!username && !skill && !skillToRemove) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         message: "Please provide required fields!",
       });
@@ -70,8 +71,7 @@ const updateUser = async (req, res) => {
       });
     }
 
-    // Update email and username if provided
-    if (email) user.email = email;
+    // Update username if provided
     if (username) user.username = username;
 
     // If skill is provided, add it to user.skills (considering case-insensitive comparison)
@@ -136,6 +136,13 @@ const updateUserPassword = async (req, res) => {
     // throw new CustomError.BadRequestError(
     //   "Please provide old and new passwords!"
     // );
+  }
+
+  if (!validator.isStrongPassword(newPassword)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message:
+        "Please provide strong password with 1 numeric, special, capital and small characters!",
+    });
   }
   // matches
   const user = await User.findOne({ _id: req.user.userId });

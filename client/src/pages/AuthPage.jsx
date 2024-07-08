@@ -67,6 +67,7 @@ const AuthPage = ({ as }) => {
               label="Username"
               className="lg:w-80 md:w-52"
               onChange={handleChange}
+              isRequired={true}
             />
           )}
           <Input
@@ -76,12 +77,14 @@ const AuthPage = ({ as }) => {
             label="Email"
             className="lg:w-80 md:w-52"
             onChange={handleChange}
+            isRequired={true}
           />
           <Input
             value={values.password}
             label="Password"
             name="password"
             onChange={handleChange}
+            isRequired={true}
             endContent={
               <button
                 className="focus:outline-none"

@@ -16,6 +16,19 @@ const validator = require("validator");
 const register = async (req, res) => {
   const { email, username, password } = req.body;
 
+  if (!validator.isEmail(email)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: "Please provide valid email address!",
+    });
+  }
+
+  if (!validator.isStrongPassword(password)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message:
+        "Please provide strong password with 1 numeric, special, capital and small characters!",
+    });
+  }
+
   // check if email exists
   const usernameExists = await User.findOne({ username });
 
@@ -65,13 +78,17 @@ const verifyEmail = async (req, res) => {
   // check user
   const user = await User.findOne({ email });
   if (!user) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid email!" });
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "Invalid email!" });
     // throw new CustomError.BadRequestError("Invalid email!");
   }
 
   // validate token
   if (user.verificationToken !== verificationToken) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid token!" });
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "Invalid token!" });
     // throw new CustomError.BadRequestError("Invalid token!");
   }
 
@@ -85,6 +102,12 @@ const verifyEmail = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+
+  if (!validator.isEmail(email)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: "Please provide valid email address!",
+    });
+  }
 
   // check requirements
   if (!email || !password) {
@@ -106,7 +129,9 @@ const login = async (req, res) => {
   // check password match
   const isPasswordCorrect = await user.comparePassword(password);
   if (!isPasswordCorrect) {
-    return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Invalid password!" });
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ message: "Invalid password!" });
     // throw new CustomError.UnauthenticatedError("Invalid password!");
   }
 
@@ -165,11 +190,10 @@ const logout = async (req, res) => {
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   // check email exist
-  if (!email) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "Please provide valid email!" });
-    // throw new CustomError.BadRequestError("Please provide valid email!");
+  if (!validator.isEmail(email)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: "Please provide valid email address!",
+    });
   }
 
   // check user exist
@@ -207,6 +231,12 @@ const resetPassword = async (req, res) => {
     // throw new CustomError.BadRequestError(
     //   "Please provide all required fields!"
     // );
+  }
+
+  if (!validator.isEmail(email)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: "Please provide valid email address!",
+    });
   }
 
   // validate strong password
