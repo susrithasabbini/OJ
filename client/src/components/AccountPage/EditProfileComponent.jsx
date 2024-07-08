@@ -44,7 +44,7 @@ const EditProfileComponent = ({ isOwner, paramsUser }) => {
       toast.success("Profile updated successfully");
       setIsEditing(false);
     } catch (error) {
-      toast.error("Failed to update profile");
+      toast.error(error.response.data.message);
       console.error("Failed to update user:", error);
     }
     setIsLoading(false);
