@@ -51,7 +51,7 @@ const ResetPasswordPage = () => {
 
   if (loading)
     return (
-      <h1 className="text-2xl text-center text-violet-600 my-40">Loading...</h1>
+      <h1 className="text-2xl text-center text-blue-600 my-40">Loading...</h1>
     );
 
   return (

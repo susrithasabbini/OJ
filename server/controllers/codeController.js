@@ -28,9 +28,9 @@ const runCode = async (req, res) => {
     else if (language === "python")
       output = await executePython(filePath, inputPath, timelimit);
 
-    res.json({ filePath, inputPath, output });
+    return res.json({ filePath, inputPath, output });
   } catch (error) {
-    res.status(500).json({ error: error.message, stderr: error.stderr });
+    return res.status(500).json({ error: error.message, stderr: error.stderr });
   }
 };
 

@@ -23,7 +23,7 @@ const authenticateUser = async (req, res, next) => {
     // if no token
 
     if (!existingToken || !existingToken?.isValid) {
-      res.status(StatusCodes.UNAUTHORIZED).json({ message: "Please login!" });
+      return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Please login!" });
       // throw new CustomError.UnauthenticatedError("Authentication Invalid");
     }
 
@@ -37,7 +37,7 @@ const authenticateUser = async (req, res, next) => {
     req.user = payload.user;
     next();
   } catch (error) {
-    res.status(StatusCodes.UNAUTHORIZED).json({ message: "Please login!" });
+    return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Please login!" });
     // throw new CustomError.UnauthenticatedError("Authentication Invalid");
   }
 };
