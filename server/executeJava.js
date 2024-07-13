@@ -32,7 +32,7 @@ const executeJava = (filepath, inputPath, timelimit) => {
         { timeout: timelimit * 1000 },
         (error, stdout, stderr) => {
           if (stderr) {
-            reject(stderr);
+            reject({ stderr });
             return;
           }
           if (error) {
