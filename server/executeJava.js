@@ -2,7 +2,7 @@ const {
   downloadJavaOutputFromFirebase,
 } = require("./firebase/downloadFileFromFirebase");
 
-const { exec, spawn } = require("child_process");
+const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -18,40 +18,40 @@ const normalize = (str) => {
 
 const executeJava = (filepath, inputPath, timelimit) => {
   return new Promise((resolve, reject) => {
+    // Read the input file contents
     fs.readFile(inputPath, "utf8", (err, inputData) => {
       if (err) {
         return reject({ error: err });
       }
 
-      const command = "java";
-      const args = [filepath];
+      // Execute the compiled Java file
+      const runCommand = `java "${filepath}"`;
 
-      const proc = spawn(command, args);
-
-      let stdout = "";
-      let stderr = "";
-
-      proc.stdin.write(inputData);
-      proc.stdin.end();
-
-      proc.stdout.on("data", (data) => {
-        if (data) stdout += data.toString();
-      });
-
-      proc.stderr.on("data", (data) => {
-        if (data) stderr += data.toString();
-      });
-
-      proc.on("close", (code) => {
-        if (code !== 0) {
-          return reject({ error: `Process exited with code ${code}`, stderr });
+      const execCommand = exec(
+        runCommand,
+        { timeout: timelimit * 1000 },
+        (error, stdout, stderr) => {
+          if (stderr) {
+            reject(stderr);
+            return;
+          }
+          if (error) {
+            if (error.killed) {
+              return resolve("time limit exceeded");
+            }
+            reject({ error: error.message, stderr });
+            return;
+          }
+          resolve(stdout);
         }
-        resolve(stdout);
-      });
+      );
 
+      // Pass the input data to the process stdin
+      execCommand.stdin.end(inputData);
+
+      // Kill the process if it exceeds the time limit
       setTimeout(() => {
-        proc.kill();
-        resolve("time limit exceeded");
+        execCommand.kill();
       }, timelimit * 1000);
     });
   });
@@ -81,7 +81,7 @@ const validateJavaTestCases = async (
           return;
         }
         if (error) {
-          if (error.syscall === "kill") {
+          if (error.killed) {
             return resolve("time limit exceeded");
           }
           reject({ error, stderr });

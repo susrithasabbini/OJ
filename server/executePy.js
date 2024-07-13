@@ -70,7 +70,7 @@ const validatePythonTestCases = async (
   const jobId = path.basename(filePath).split(".")[0];
   const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
 
-  // console.log(`python "${filePath}" < "${inputPath}" > "${codeOutputPath}"`);
+  console.log(`python "${filePath}" < "${inputPath}" > "${codeOutputPath}"`);
 
   return new Promise((resolve, reject) => {
     const execCommand = exec(
@@ -80,7 +80,7 @@ const validatePythonTestCases = async (
         if (stderr) {
           return reject(stderr);
         } else if (error) {
-          if (error.syscall === "kill") {
+          if (error.killed) {
             return resolve("time limit exceeded");
           }
           return reject({ error: error.message, stderr });
