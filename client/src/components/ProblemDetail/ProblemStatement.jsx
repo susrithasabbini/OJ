@@ -194,7 +194,7 @@ const ProblemStatement = ({ problem }) => {
           </div>
         </Tab>
         <Tab key="submissions" title="Submissions">
-          <Table>
+          <Table className="h-[40rem] overflow-y-scroll thin-scrollbar">
             <TableHeader>
               <TableColumn>Language</TableColumn>
               <TableColumn>Output</TableColumn>
@@ -252,6 +252,7 @@ const ProblemStatement = ({ problem }) => {
                     language={selectedSubmission?.language}
                     theme="vs-dark"
                     value={selectedSubmission?.code}
+                    options={{readOnly: true}}
                   />
                 </ModalBody>
                 <ModalFooter>

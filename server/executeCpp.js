@@ -28,7 +28,7 @@ const executeCpp = (filepath, inputPath, timelimit) => {
         if (compileError) {
           return reject({ error: compileError.message, stderr });
         } else if (stderr) {
-          return reject({ stderr });
+          return reject(stderr);
         } else {
           // Execute the compiled executable with time limit
           const execCommand = exec(
@@ -38,7 +38,7 @@ const executeCpp = (filepath, inputPath, timelimit) => {
               if (execStderr) {
                 return reject({ stderr: execStderr });
               } else if (execError) {
-                if (execError.killed) {
+                if (execError.syscall === "kill") {
                   return resolve("time limit exceeded");
                 }
                 return reject({ error: execError.message, stderr: execStderr });
@@ -84,7 +84,7 @@ const validateCppTestCases = async (
         if (stderr) {
           return reject(stderr);
         } else if (error) {
-          if (error.killed) {
+          if (error.syscall === "kill") {
             return resolve("time limit exceeded");
           }
           return reject({ error, stderr });
