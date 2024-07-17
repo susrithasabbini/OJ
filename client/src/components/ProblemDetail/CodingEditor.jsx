@@ -75,7 +75,7 @@ const CodingEditor = ({ problem }) => {
       console.log(data);
       setLoading(false);
       if (data.output) setOutput(data.output) || "";
-      if (data.output === "accepted") navigate(`/compete/${contestId}`);
+      if (data.output === "accepted" && contestId) navigate(`/compete/${contestId}`);
     } catch (error) {
       console.log(error);
       setLoading(false);
