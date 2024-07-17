@@ -14,7 +14,7 @@ import axios from "axios";
 import { url } from "../../config";
 import { useGlobalContext } from "../../context";
 import { toast } from "sonner";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { RotateCcw } from "lucide-react";
 
 const CodingEditor = ({ problem }) => {
@@ -25,6 +25,7 @@ const CodingEditor = ({ problem }) => {
   const [loading, setLoading] = useState(false);
   const { user } = useGlobalContext();
   const { contestId } = useParams();
+  const navigate = useNavigate();
 
   const handleRunCode = async () => {
     if (!user) {
@@ -74,6 +75,7 @@ const CodingEditor = ({ problem }) => {
       console.log(data);
       setLoading(false);
       if (data.output) setOutput(data.output) || "";
+      if (data.output === "accepted") navigate(`/compete/${contestId}`);
     } catch (error) {
       console.log(error);
       setLoading(false);

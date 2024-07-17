@@ -21,8 +21,10 @@ const ContestDetailPage = () => {
   const [leaderboard, setLeaderboard] = useState([]);
   const { user } = useGlobalContext();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     const fetchContest = async () => {
       try {
         const response = await axios.get(
@@ -47,6 +49,7 @@ const ContestDetailPage = () => {
           }
         );
         setLeaderboard(response.data.leaderboardWithDetails);
+        setLoading(false);
       } catch (error) {
         toast.error("Failed to fetch leaderboard");
         console.error("Failed to fetch leaderboard:", error);
@@ -59,14 +62,23 @@ const ContestDetailPage = () => {
 
   const handleProblemClick = (slug) => {
     if (contest.status === "Ended") {
-      toast.warning("Contest already ended!", { position: "top-center" });
+      toast.warning("Contest already ended!", {
+        position: "top-center",
+        description: "Do you want to solve that problem?",
+        action: {
+          label: "Yes",
+          onClick: () => navigate(`/problems/${slug}/description`),
+        },
+      });
       return;
     }
     navigate(`/contests/${contestId}/problems/${slug}/description`);
   };
 
-  if (!contest) {
-    return <div className="p-6 text-center">Loading...</div>;
+  if (loading) {
+    return (
+      <h1 className="text-2xl text-center text-blue-600 my-40">Loading...</h1>
+    );
   }
 
   return (
@@ -80,7 +92,7 @@ const ContestDetailPage = () => {
         </div>
       </div>
       <div className="space-y-6 mb-8">
-        {contest.problems.map((problem) => (
+        {contest?.problems.map((problem) => (
           <div
             key={problem?._id}
             onClick={() => handleProblemClick(problem.slug)}

@@ -133,7 +133,7 @@ export default function App() {
   }
   return (
     <div className="w-screen h-screen overflow-x-hidden">
-      <Toaster />
+      <Toaster richColors />
       <RouterProvider router={Router} />
     </div>
   );

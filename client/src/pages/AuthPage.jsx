@@ -1,4 +1,4 @@
-import { Button, Input } from "@nextui-org/react";
+import { Button, Input, Spinner } from "@nextui-org/react";
 import { useState } from "react";
 import { EyeSlashFilledIcon } from "../icons/EyeSlashFilledIcon";
 import { EyeFilledIcon } from "../icons/EyeFilledIcon";
@@ -12,6 +12,7 @@ const AuthPage = ({ as }) => {
   const { saveUser } = useGlobalContext();
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
+  const [loading, setIsLoading] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
   const [values, setValues] = useState({
     username: "",
@@ -24,6 +25,7 @@ const AuthPage = ({ as }) => {
   };
 
   const onSubmit = async (e) => {
+    setIsLoading(true);
     e.preventDefault();
     const { username, email, password } = values;
     const registerUser = { username, email, password };
@@ -34,9 +36,11 @@ const AuthPage = ({ as }) => {
           `${url}/api/v1/auth/register`,
           registerUser
         );
+        setIsLoading(false);
         toast.success(data.message);
       } catch (error) {
         console.log(error);
+        setIsLoading(false);
         toast.error(error.response.data.message);
       }
     } else if (as === "login") {
@@ -46,10 +50,12 @@ const AuthPage = ({ as }) => {
           loginUser,
           { withCredentials: true }
         );
+        setIsLoading(false);
         saveUser(data.user);
         navigate("/");
       } catch (error) {
         console.log(error);
+        setIsLoading(false);
         toast.error(error.response.data.message);
       }
     }
@@ -101,7 +107,8 @@ const AuthPage = ({ as }) => {
             type={isVisible ? "text" : "password"}
             className="lg:w-80 md:w-52"
           />
-          <Button type="submit" variant="solid" color="primary">
+          {loading && <Spinner />}
+          <Button type="submit" variant="solid" color="primary" isDisabled={loading}>
             {as.charAt(0).toUpperCase() + as.slice(1)}
           </Button>
         </form>

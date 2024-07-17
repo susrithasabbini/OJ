@@ -51,7 +51,7 @@ const SubmissionsComponent = ({ paramsUser }) => {
           Active days: <span className="text-blue-500">{activeDaysCount}</span>
         </p>
       </div>
-      <div className="flex flex-row gap-3 justify-between items-center w-full overflow-scroll thin-scrollbar">
+      <div className="flex flex-row gap-3 justify-between items-center w-full overflow-x-scroll thin-scrollbar">
         {days.map((dayCount, monthIndex) => {
           const startDate = new Date(2024, monthIndex, 1);
           const startDayOfWeek = startDate.getDay();

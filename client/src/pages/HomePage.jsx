@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import codingBoy from "../assets/coding_boy.svg";
 import competition from "../assets/competition.svg";
 import trophy from "../assets/trophy.svg";
+import { useGlobalContext } from "../context";
 
 const LandingPage = () => {
+  const { user } = useGlobalContext();
   return (
     <div className="flex items-center justify-start flex-col h-full w-full">
       <div className="bg-gradient-to-r from-blue-500 to-blue-400 text-white w-full flex flex-col items-center py-16 rounded-b-lg shadow-lg">
@@ -13,11 +15,13 @@ const LandingPage = () => {
           Hone your coding skills, compete in challenges, and become a better
           programmer.
         </p>
-        <Link to="/signup">
-          <button className="bg-white hover:bg-green-300 text-gray-700 px-6 py-3 rounded-full font-bold hover:scale-105">
-            Get Started
-          </button>
-        </Link>
+        {!user && (
+          <Link to="/signup">
+            <button className="bg-white hover:bg-green-300 text-gray-700 px-6 py-3 rounded-full font-bold hover:scale-105">
+              Get Started
+            </button>
+          </Link>
+        )}
       </div>
 
       <div className="w-full flex flex-col items-center gap-y-32">

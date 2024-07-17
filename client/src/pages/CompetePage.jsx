@@ -12,8 +12,6 @@ const CompetePage = () => {
   const navigate = useNavigate();
   const { user } = useGlobalContext();
 
-  console.log({ contests });
-
   useEffect(() => {
     const fetchContests = async () => {
       try {
@@ -103,15 +101,17 @@ const CompetePage = () => {
                   Join Now
                 </Button>
               )}
-              {contest.isPublic && !isRegistered && (
-                <Button
-                  color="primary"
-                  className="w-full"
-                  onClick={() => handleRegister(contest._id)}
-                >
-                  Register
-                </Button>
-              )}
+              {contest.status !== "Ended" &&
+                contest.isPublic &&
+                !isRegistered && (
+                  <Button
+                    color="primary"
+                    className="w-full"
+                    onClick={() => handleRegister(contest._id)}
+                  >
+                    Register
+                  </Button>
+                )}
               {contest.status === "Upcoming" &&
                 contest.isPublic &&
                 isRegistered && (
@@ -130,7 +130,7 @@ const CompetePage = () => {
                     </Button>
                   </Tooltip>
                 )}
-              {contest.status === "Ended" && isRegistered && (
+              {contest.status === "Ended" && contest.isPublic && (
                 <Button
                   color="primary"
                   className="w-full"

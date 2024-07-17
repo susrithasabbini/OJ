@@ -2,6 +2,7 @@ const { StatusCodes } = require("http-status-codes");
 const Contest = require("../models/Contest");
 const Problem = require("../models/Problem");
 const User = require("../models/User");
+const Submission = require("../models/Submission");
 
 const getAllContests = async (req, res) => {
   try {
@@ -249,53 +250,102 @@ const getRecentContests = async (req, res) => {
 const getContestLeaderboard = async (req, res) => {
   try {
     const contestId = req.params.id;
-    const contest = await Contest.findById(contestId);
 
+    const contest = await Contest.findById(contestId);
     if (!contest) {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ error: "Contest not found" });
     }
 
-    // Create an object to store the total points for each user
-    const userPoints = {};
+    // Create an object to store the total points, submissions, and earliest submission time for each user
+    const userPointsAndSubmissions = {};
 
-    // Add registered participants to the userPoints object with 0 points initially
+    // Add registered participants to the userPointsAndSubmissions object with 0 points, submissions, and null earliest submission time initially
     contest.participants.forEach((userId) => {
-      userPoints[userId] = 0;
+      userPointsAndSubmissions[userId] = {
+        points: 0,
+        submissions: 0,
+        earliestSubmission: null,
+      };
     });
 
     // Iterate through each problem in the contest
-    contest.problems.forEach((problem) => {
-      // Iterate through each user who solved the problem
-      problem.solvedBy.forEach((userId) => {
-        if (!userPoints[userId]) {
-          userPoints[userId] = 0;
+    for (const problem of contest.problems) {
+      // Add points for users who solved the problem
+      for (const userId of problem.solvedBy) {
+        if (!userPointsAndSubmissions[userId]) {
+          userPointsAndSubmissions[userId] = {
+            points: 0,
+            submissions: 0,
+            earliestSubmission: null,
+          };
         }
-        userPoints[userId] += problem.points;
-      });
-    });
+        userPointsAndSubmissions[userId].points += problem.points;
+      }
 
-    // Convert userPoints object to an array of users with their total points
-    const leaderboard = Object.keys(userPoints).map((userId) => ({
+      // Count the number of submissions and find the earliest submission time for each user in this contest for this problem
+      const submissions = await Submission.find({
+        contestId: contestId, // Ensure contestId is queried as a string
+        problemId: problem.problemId, // Ensure problemId is queried as a string
+      }).select("userId createdAt");
+
+      // Increment submission count and update earliest submission time for each user
+      submissions.forEach((submission) => {
+        const userId = submission.userId;
+        if (!userPointsAndSubmissions[userId]) {
+          userPointsAndSubmissions[userId] = {
+            points: 0,
+            submissions: 0,
+            earliestSubmission: null,
+          };
+        }
+        userPointsAndSubmissions[userId].submissions += 1;
+
+        if (
+          !userPointsAndSubmissions[userId].earliestSubmission ||
+          submission.createdAt <
+            userPointsAndSubmissions[userId].earliestSubmission
+        ) {
+          userPointsAndSubmissions[userId].earliestSubmission =
+            submission.createdAt;
+        }
+      });
+    }
+
+    // Convert userPointsAndSubmissions object to an array of users with their total points, submissions, and earliest submission time
+    const leaderboard = Object.keys(userPointsAndSubmissions).map((userId) => ({
       userId,
-      points: userPoints[userId],
+      points: userPointsAndSubmissions[userId].points,
+      submissions: userPointsAndSubmissions[userId].submissions,
+      earliestSubmission: userPointsAndSubmissions[userId].earliestSubmission,
     }));
 
-    // Sort the leaderboard in descending order of points
-    leaderboard.sort((a, b) => b.points - a.points);
+    // Sort the leaderboard by points (descending), submissions (ascending), and earliest submission time (ascending)
+    leaderboard.sort((a, b) => {
+      if (b.points === a.points) {
+        if (a.submissions === b.submissions) {
+          return a.earliestSubmission - b.earliestSubmission;
+        }
+        return a.submissions - b.submissions;
+      }
+      return b.points - a.points;
+    });
 
     // Populate user details if needed
     const populatedLeaderboard = await User.find({
       _id: { $in: leaderboard.map((u) => u.userId) },
     });
-    const leaderboardWithDetails = leaderboard.map((u) => ({
-      ...u,
-      username:
-        populatedLeaderboard.find(
-          (user) => user._id.toString() === u.userId.toString()
-        )?.username || "Unknown",
-    }));
+
+    const leaderboardWithDetails = leaderboard.map((u) => {
+      const user = populatedLeaderboard.find(
+        (user) => user._id.toString() === u.userId.toString()
+      );
+      return {
+        ...u,
+        username: user ? user.username : "Unknown",
+      };
+    });
 
     return res.status(StatusCodes.OK).json({ leaderboardWithDetails });
   } catch (error) {
@@ -318,31 +368,74 @@ const getAllContestsLeaderboard = async (req, res) => {
       ],
     });
 
-    // Create an object to store the total points for each user across all contests
-    const userPoints = {};
+    // Create an object to store the total points, submissions, and earliest submission time for each user
+    const userPointsAndSubmissions = {};
+    const userEarliestSubmission = {};
 
     // Iterate through each relevant contest
-    relevantContests.forEach((contest) => {
+    for (const contest of relevantContests) {
       // Iterate through each problem in the contest
-      contest.problems.forEach((problem) => {
-        // Iterate through each user who solved the problem
-        problem.solvedBy.forEach((userId) => {
-          if (!userPoints[userId]) {
-            userPoints[userId] = 0;
+      for (const problem of contest.problems) {
+        // Add points for users who solved the problem
+        for (const userId of problem.solvedBy) {
+          if (!userPointsAndSubmissions[userId]) {
+            userPointsAndSubmissions[userId] = {
+              points: 0,
+              submissions: 0,
+              earliestSubmission: null,
+            };
           }
-          userPoints[userId] += problem.points;
-        });
-      });
-    });
+          userPointsAndSubmissions[userId].points += problem.points;
+        }
 
-    // Convert userPoints object to an array of users with their total points
-    const leaderboard = Object.keys(userPoints).map((userId) => ({
+        // Count the number of submissions and find the earliest submission time for each user in this contest for this problem
+        const submissions = await Submission.find({
+          contestId: contest._id.toString(), // Ensure contestId is queried as a string
+          problemId: problem.problemId, // Ensure problemId is queried as a string
+        }).select("userId createdAt");
+
+        // Increment submission count and update earliest submission time for each user
+        submissions.forEach((submission) => {
+          const userId = submission.userId;
+          if (!userPointsAndSubmissions[userId]) {
+            userPointsAndSubmissions[userId] = {
+              points: 0,
+              submissions: 0,
+              earliestSubmission: null,
+            };
+          }
+          userPointsAndSubmissions[userId].submissions += 1;
+
+          if (
+            !userPointsAndSubmissions[userId].earliestSubmission ||
+            submission.createdAt <
+              userPointsAndSubmissions[userId].earliestSubmission
+          ) {
+            userPointsAndSubmissions[userId].earliestSubmission =
+              submission.createdAt;
+          }
+        });
+      }
+    }
+
+    // Convert userPointsAndSubmissions object to an array of users with their total points, submissions, and earliest submission time
+    const leaderboard = Object.keys(userPointsAndSubmissions).map((userId) => ({
       userId,
-      points: userPoints[userId],
+      points: userPointsAndSubmissions[userId].points,
+      submissions: userPointsAndSubmissions[userId].submissions,
+      earliestSubmission: userPointsAndSubmissions[userId].earliestSubmission,
     }));
 
-    // Sort the leaderboard in descending order of points
-    leaderboard.sort((a, b) => b.points - a.points);
+    // Sort the leaderboard by points (descending), number of submissions (ascending), and earliest submission time (ascending)
+    leaderboard.sort((a, b) => {
+      if (b.points === a.points) {
+        if (a.submissions === b.submissions) {
+          return (a.earliestSubmission || 0) - (b.earliestSubmission || 0);
+        }
+        return a.submissions - b.submissions;
+      }
+      return b.points - a.points;
+    });
 
     // Populate user details if needed
     const populatedLeaderboard = await User.find({

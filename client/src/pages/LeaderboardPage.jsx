@@ -18,14 +18,17 @@ import { toast } from "sonner";
 const LeaderboardPage = () => {
   const { user } = useGlobalContext();
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     const fetchLeaderboard = async () => {
       try {
         const response = await axios.get(`${url}/api/v1/contests/leaderboard`, {
           withCredentials: true,
         });
         setUsers(response.data.leaderboard);
+        setLoading(false);
       } catch (error) {
         toast.error("Failed to fetch leaderboard");
         console.error("Failed to fetch leaderboard:", error);
@@ -34,9 +37,11 @@ const LeaderboardPage = () => {
     fetchLeaderboard();
   }, []);
 
-  const loggedInUser = users?.find((u) => u.username === user?.username);
-  const loggedInUserRank =
-    users?.findIndex((u) => u.username === user?.username) + 1;
+  if (loading) {
+    return (
+      <h1 className="text-2xl text-center text-blue-600 my-40">Loading...</h1>
+    );
+  }
 
   return (
     <div className="p-6 h-fit w-full">
@@ -59,19 +64,6 @@ const LeaderboardPage = () => {
               <TableColumn className="text-left p-4">Points</TableColumn>
             </TableHeader>
             <TableBody>
-              {loggedInUserRank !== 0 && loggedInUserRank !== 1 && (
-                <TableRow className="bg-yellow-100/60 hover:bg-blue-100 transition-all">
-                  <TableCell className="py-2 px-4 border-b border-gray-200 font-semibold">
-                    {loggedInUserRank}
-                  </TableCell>
-                  <TableCell className="py-2 px-4 border-b border-gray-200 font-semibold">
-                    {loggedInUser?.username}
-                  </TableCell>
-                  <TableCell className="py-2 px-4 border-b border-gray-200 font-semibold">
-                    {loggedInUser?.points}
-                  </TableCell>
-                </TableRow>
-              )}
               {users?.map((u, index) => (
                 <TableRow
                   key={u.userId}

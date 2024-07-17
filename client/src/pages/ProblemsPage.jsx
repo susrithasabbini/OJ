@@ -102,7 +102,7 @@ const PracticeProblemsPage = () => {
   );
 
   if (loading) {
-    return <div className="text-center my-40 text-2xl">Loading...</div>;
+    return <div className="text-center my-40 text-2xl text-blue-600">Loading...</div>;
   }
 
   return (
