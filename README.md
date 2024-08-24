@@ -37,3 +37,8 @@ This project is an online judge platform that allows users to solve coding probl
    - _Client_: `cd client` && `npm run dev`.
    - _Server_: `cd server` && `npm run dev`. (In local)
    - _Server_: `docker build -t oj-backend .` && `docker run -d -p 5000:5000 --env-file .env oj-backend` (In docker)
+
+<img width="1241" alt="image" src="https://github.com/user-attachments/assets/dd3a61f5-82d3-4e27-aa18-40618ead6a21">
+<img width="1083" alt="image" src="https://github.com/user-attachments/assets/d7da214b-2a87-4bfd-a922-4d3d5b914f96">
+
+
